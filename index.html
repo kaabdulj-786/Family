@@ -1,101 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KATHIRI ILLAM</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KATHIRI ILLAM - Family Dashboard</title>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Firebase (compat) SDKs - required before script.js -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
-<div id="login-container">
-    <img src="assets/logo.png" class="logo" alt="Kathiri Illam Logo">
-    <h1 class="app-title">KATHIRI ILLAM</h1>
-    <div class="card login-card">
-        <h2>Login</h2>
-        <input type="text" id="username" placeholder="Enter Username">
-        <input type="password" id="password" placeholder="Enter Password">
-        <button onclick="login()">Login</button>
-        <p id="login-error" class="error-message"></p>
-    </div>
-</div>
+  <!-- LOGIN - centered professional -->
+  <main id="login-page" class="centered">
+    <div class="login-card card">
+      <img src="assets/logo.png" alt="logo" class="logo-lg" />
+      <h1 class="brand">KATHIRI ILLAM</h1>
+      <p class="subtle">Family Dashboard - Shared Login</p>
 
-<!-- DASHBOARD -->
-<div id="dashboard" style="display:none;">
-    <header>
-        <img src="Screenshot 2025-12-01 013830.png" class="logo" alt="Logo">
-        <h1 class="app-title">KATHIRI ILLAM - Family Dashboard</h1>
-        <button class="logout-btn" onclick="logout()">Logout</button>
+      <input id="login-username" type="text" placeholder="Username" autocomplete="username" />
+      <input id="login-password" type="password" placeholder="Password" autocomplete="current-password" />
+
+      <div class="login-row">
+        <button id="login-btn">Login</button>
+        <button id="demo-btn" class="ghost">Demo</button>
+      </div>
+
+      <p id="login-error" class="error"></p>
+      <p class="hint">Username: <strong>KATHIRI</strong> | Password: <strong>Kathiri@786</strong></p>
+    </div>
+  </main>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard" class="app" style="display:none;">
+
+    <header class="topbar">
+      <div class="left">
+        <img src="assets/logo.png" class="logo-sm" alt="logo" />
+        <div>
+          <h1 class="title">KATHIRI ILLAM</h1>
+          <div class="subtitle">Family Dashboard</div>
+        </div>
+      </div>
+      <div class="right">
+        <button id="logout-btn" class="ghost">Logout</button>
+      </div>
     </header>
 
-    <div class="grid-container">
+    <div class="container">
 
-        <!-- 🌙 MOWLID DURATION -->
-        <div class="card">
+      <!-- TOP: Announcement & Today's Birthdays - large rectangles -->
+      <div class="top-grid">
+        <!-- ANNOUNCEMENT PORT -->
+        <section class="card large-port">
+          <div class="port-header">
+            <h2>Announcement (Latest)</h2>
+            <button id="edit-announce-btn" class="small-ghost">Edit</button>
+          </div>
+
+          <div id="announce-display" class="display-big">
+            <!-- Latest announcement content will be injected -->
+            <div id="announce-main">No announcements yet.</div>
+            <div id="announce-meta" class="muted"></div>
+          </div>
+
+          <!-- Edit area hidden by default, opened by Edit button -->
+          <div id="announce-edit" class="edit-area" style="display:none;">
+            <textarea id="announce-input" placeholder="Write formal announcement..."></textarea>
+            <!-- duration input hidden in display but saved -->
+            <input id="announce-duration" placeholder="Duration (optional)" />
+            <div class="row">
+              <button id="announce-save">Save Announcement</button>
+              <button id="announce-cancel" class="ghost">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- BIRTHDAY PORT (Today's birthdays) -->
+        <section class="card large-port">
+          <div class="port-header">
+            <h2>Today's Birthdays</h2>
+            <button id="edit-bday-btn" class="small-ghost">Add / Edit List</button>
+          </div>
+
+          <div id="bday-display" class="display-big">
+            <div id="bday-main">No birthdays today.</div>
+          </div>
+
+          <!-- Edit area for birthday list (managed separately) -->
+          <div id="bday-edit" class="edit-area" style="display:none;">
+            <div class="add-row">
+              <input id="bday-name" placeholder="Name" />
+              <input id="bday-date" type="date" />
+              <button id="bday-add">Add</button>
+            </div>
+            <p class="muted">The top display shows birthdays that occur today. Use the list below to manage all birthdays.</p>
+            <div class="row">
+              <button id="bday-close" class="ghost">Done</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- MID: Mowlid Duration (large) + Status + Tabrook (Duty) -->
+      <div class="mid-grid">
+        <!-- Mowlid Duration - large display; edit via button -->
+        <section class="card mowlid-card">
+          <div class="port-header">
             <h2>Mowlid Duration</h2>
-            <input type="text" id="mowlidName" placeholder="Enter Mowlid Name">
-            <input type="number" id="durationDays" placeholder="Enter Duration (days)">
-            <button onclick="saveDuration()">Save</button>
-            <p><strong>Current Mowlid:</strong> <span id="currentMowlid"></span></p>
-            <p><strong>Duration:</strong> <span id="durationDisplay"></span></p>
+            <button id="edit-mowlid-btn" class="small-ghost">Edit</button>
+          </div>
+
+          <div id="mowlid-display" class="mowlid-display">
+            <div class="mowlid-name" id="mowlid-name-display">No meeting scheduled</div>
+            <div class="mowlid-days" id="mowlid-days-display"></div>
+          </div>
+
+          <!-- edit area -->
+          <div id="mowlid-edit" class="edit-area" style="display:none;">
+            <input id="mowlid-name" placeholder="Mowlid Name" />
+            <input id="mowlid-days" type="number" min="0" placeholder="Duration in days" />
+            <div class="row">
+              <button id="mowlid-save">Save</button>
+              <button id="mowlid-cancel" class="ghost">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mowlid Status (small) -->
+        <section class="card small-card">
+          <div class="port-header">
+            <h2>Mowlid Status</h2>
+            <button id="edit-status-btn" class="small-ghost">Edit</button>
+          </div>
+          <div class="card-body small">
+            <div id="status-display" class="status-large">Not Started</div>
+          </div>
+          <div id="status-edit-area" class="edit-area" style="display:none;">
+            <select id="status-select">
+              <option>Not Started</option>
+              <option>Started</option>
+              <option>Completed</option>
+            </select>
+            <div class="row">
+              <button id="status-save">Save</button>
+              <button id="status-cancel" class="ghost">Cancel</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mowlid Tabrook (Duty schedule) -->
+        <section class="card">
+          <div class="port-header">
+            <h2>Mowlid Tabrook (Duty Schedule)</h2>
+            <button id="edit-tabrook-btn" class="small-ghost">Edit Tabrook</button>
+          </div>
+
+          <div id="tabrook-display" class="tabrook-list">
+            <!-- Will show Day 1, Day 2 ... or No meeting scheduled -->
+            <div id="tabrook-main" class="muted">No meeting scheduled.</div>
+          </div>
+
+          <!-- edit area -->
+          <div id="tabrook-edit" class="edit-area" style="display:none;">
+            <div id="tabrook-edit-list"></div>
+            <div class="row">
+              <button id="tabrook-save">Save Tabrook</button>
+              <button id="tabrook-cancel" class="ghost">Cancel</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Family Tree (Kathiri Tree) -->
+      <section class="card">
+        <div class="port-header">
+          <h2>Kathiri Tree</h2>
+          <button id="edit-tree-btn" class="small-ghost">Edit Tree</button>
         </div>
 
-        <!-- 📌 MOWLID STATUS -->
-        <div class="card small-card">
-            <h2>Mowlid Status <span class="edit-icon" onclick="toggleStatus()">✏️</span></h2>
-            <p id="statusDisplay">Not Started</p>
+        <div id="tree-display" class="tree-area">
+          <!-- tree cards will be injected here -->
         </div>
 
-        <!-- 📅 MOWLID TABROOK -->
-        <div class="card">
-            <h2>Mowlid Tabrook</h2>
-            <table id="dutyTable"></table>
+        <div id="tree-edit-area" class="edit-area" style="display:none;">
+          <div class="add-row">
+            <input id="member-name" placeholder="Member name" />
+            <input id="member-parent" placeholder="Parent name (optional)" />
+            <button id="member-add">Add</button>
+          </div>
+          <p class="muted">Add members with parent name to set hierarchy. Use edit/delete icons next to members below.</p>
+          <div class="row">
+            <button id="tree-done" class="ghost">Done</button>
+            <button id="tree-clear" class="ghost">Clear All</button>
+          </div>
         </div>
+      </section>
 
-        <!-- 🎂 BIRTHDAY DISPLAY -->
-        <div class="card">
-            <h2>Birthday Port</h2>
-            <input type="text" id="bdayName" placeholder="Name">
-            <input type="date" id="bdayDate">
-            <button onclick="addBirthday()">Add</button>
-            <div id="currentBirthday"></div>
-        </div>
+      <!-- Bottom: History lists -->
+      <div class="history-grid">
+        <section class="card long-card">
+          <h2>Announcement History</h2>
+          <ul id="announce-history" class="history-list"></ul>
+        </section>
 
-        <!-- 📢 ANNOUNCEMENT DISPLAY -->
-        <div class="card">
-            <h2>Announcement Port</h2>
-            <textarea id="announcementText" placeholder="Write announcement..."></textarea>
-            <input type="text" id="announcementDuration" placeholder="Duration" style="display:none;">
-            <button onclick="saveAnnouncement()">Publish</button>
-            <p id="latestAnnouncement"></p>
-        </div>
-
-        <!-- 📜 HISTORY SECTION -->
-        <div class="long-card">
-            <h2>Birthday History</h2>
-            <ul id="bdayHistory"></ul>
-        </div>
-
-        <div class="long-card">
-            <h2>Announcement History</h2>
-            <ul id="announceHistory"></ul>
-        </div>
-
-        <!-- 🌳 KATHIRI TREE -->
-        <div class="card">
-            <h2>Kathiri Tree</h2>
-            <input type="text" id="memberName" placeholder="Member Name">
-            <input type="text" id="parentName" placeholder="Parent Name">
-            <button onclick="addMember()">Add Member</button>
-            <div id="familyTree"></div>
-        </div>
+        <section class="card long-card">
+          <h2>Birthday List (All birthdays)</h2>
+          <ul id="bday-history" class="history-list"></ul>
+        </section>
+      </div>
 
     </div>
-</div>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-<script src="script.js"></script>
+  </div>
+
+  <!-- main script: logic + firebase config -->
+  <script src="script.js"></script>
 </body>
 </html>
