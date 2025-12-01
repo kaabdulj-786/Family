@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KATHIRI ILLAM</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-container">
+    <img src="assets/logo.png" class="logo" alt="Kathiri Illam Logo">
+    <h1 class="app-title">KATHIRI ILLAM</h1>
+    <div class="card login-card">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Enter Username">
+        <input type="password" id="password" placeholder="Enter Password">
+        <button onclick="login()">Login</button>
+        <p id="login-error" class="error-message"></p>
+    </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" style="display:none;">
+    <header>
+        <img src="assets/logo.png" class="logo" alt="Logo">
+        <h1 class="app-title">KATHIRI ILLAM - Family Dashboard</h1>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </header>
+
+    <div class="grid-container">
+
+        <!-- 🌙 MOWLID DURATION -->
+        <div class="card">
+            <h2>Mowlid Duration</h2>
+            <input type="text" id="mowlidName" placeholder="Enter Mowlid Name">
+            <input type="number" id="durationDays" placeholder="Enter Duration (days)">
+            <button onclick="saveDuration()">Save</button>
+            <p><strong>Current Mowlid:</strong> <span id="currentMowlid"></span></p>
+            <p><strong>Duration:</strong> <span id="durationDisplay"></span></p>
+        </div>
+
+        <!-- 📌 MOWLID STATUS -->
+        <div class="card small-card">
+            <h2>Mowlid Status <span class="edit-icon" onclick="toggleStatus()">✏️</span></h2>
+            <p id="statusDisplay">Not Started</p>
+        </div>
+
+        <!-- 📅 MOWLID TABROOK -->
+        <div class="card">
+            <h2>Mowlid Tabrook</h2>
+            <table id="dutyTable"></table>
+        </div>
+
+        <!-- 🎂 BIRTHDAY DISPLAY -->
+        <div class="card">
+            <h2>Birthday Port</h2>
+            <input type="text" id="bdayName" placeholder="Name">
+            <input type="date" id="bdayDate">
+            <button onclick="addBirthday()">Add</button>
+            <div id="currentBirthday"></div>
+        </div>
+
+        <!-- 📢 ANNOUNCEMENT DISPLAY -->
+        <div class="card">
+            <h2>Announcement Port</h2>
+            <textarea id="announcementText" placeholder="Write announcement..."></textarea>
+            <input type="text" id="announcementDuration" placeholder="Duration" style="display:none;">
+            <button onclick="saveAnnouncement()">Publish</button>
+            <p id="latestAnnouncement"></p>
+        </div>
+
+        <!-- 📜 HISTORY SECTION -->
+        <div class="long-card">
+            <h2>Birthday History</h2>
+            <ul id="bdayHistory"></ul>
+        </div>
+
+        <div class="long-card">
+            <h2>Announcement History</h2>
+            <ul id="announceHistory"></ul>
+        </div>
+
+        <!-- 🌳 KATHIRI TREE -->
+        <div class="card">
+            <h2>Kathiri Tree</h2>
+            <input type="text" id="memberName" placeholder="Member Name">
+            <input type="text" id="parentName" placeholder="Parent Name">
+            <button onclick="addMember()">Add Member</button>
+            <div id="familyTree"></div>
+        </div>
+
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
