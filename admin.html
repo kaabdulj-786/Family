@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Kathiri Illam</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>KATHIRI</h2>
+    <button onclick="showSection('mowlid')">Mowlid</button>
+    <button onclick="showSection('tabarruk')">Tabarruk</button>
+    <button onclick="showSection('birthdays')">Birthdays</button>
+    <button onclick="showSection('announcements')">Announcements</button>
+    <button onclick="showSection('family')">Family Tree</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+
+    <!-- Mowlid Section -->
+    <div id="mowlid" class="section">
+      <h2>Mowlid Control</h2>
+
+      <input type="text" id="mowlidName" placeholder="Mowlid Name">
+      <input type="number" id="mowlidDays" placeholder="Duration (Days)">
+      <input type="date" id="mowlidStart">
+
+      <button onclick="saveMowlid()">Save Mowlid</button>
+    </div>
+
+    <!-- Tabarruk -->
+    <div id="tabarruk" class="section hidden">
+      <h2>Tabarruk Management</h2>
+      <div id="tabarrukTable"></div>
+      <button onclick="saveTabarruk()">Save Tabarruk</button>
+    </div>
+
+    <!-- Birthdays -->
+    <div id="birthdays" class="section hidden">
+      <h2>Birthdays</h2>
+
+      <input type="text" id="bName" placeholder="Name">
+      <input type="date" id="bDate">
+      <button onclick="addBirthday()">Add</button>
+
+      <div id="birthdayList"></div>
+    </div>
+
+    <!-- Announcements -->
+    <div id="announcements" class="section hidden">
+      <h2>Announcements</h2>
+
+      <input type="text" id="aTitle" placeholder="Title">
+      <input type="text" id="aDesc" placeholder="Description">
+      <input type="datetime-local" id="aFrom">
+      <input type="datetime-local" id="aTo">
+
+      <button onclick="addAnnouncement()">Add</button>
+
+      <div id="announcementList"></div>
+    </div>
+
+    <!-- Family Tree -->
+    <div id="family" class="section hidden">
+      <h2>Family Tree</h2>
+
+      <input type="text" id="personName" placeholder="Name">
+      <select id="fatherSelect"></select>
+      <select id="spouseSelect"></select>
+
+      <button onclick="addPerson()">Add Person</button>
+
+      <div id="familyList"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
