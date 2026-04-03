@@ -23,6 +23,7 @@ const db = firebase.database();
 // ------------------ MOWLID ------------------
 
 function saveMowlid() {
+   console.log("clicked");
   const name = document.getElementById("mowlidName").value;
   const days = parseInt(document.getElementById("mowlidDays").value);
   const start = document.getElementById("mowlidStart").value;
