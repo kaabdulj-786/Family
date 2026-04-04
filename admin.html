@@ -12,27 +12,44 @@
 <div class="sidebar">
 <h2>Admin</h2>
 <button onclick="showSection('mowlid')">Mowlid</button>
+<button onclick="showSection('tabarruk')">Tabarruk</button>
+<button onclick="showSection('birthdays')">Birthdays</button>
+<button onclick="showSection('ann')">Announcements</button>
 <button onclick="showSection('tree')">Tree</button>
 </div>
 
 <div class="main">
 
 <div id="mowlid" class="section">
-<h2>Mowlid</h2>
-<input id="mName" placeholder="Name">
-<input id="mDays" type="number">
-<input id="mStart" type="date">
+<h3>Mowlid</h3>
+<input id="mName"><input id="mDays"><input id="mStart" type="date">
 <button onclick="saveMowlid()">Save</button>
 </div>
 
-<div id="tree" class="section">
-<h2>Create Tree</h2>
-<input id="treeName">
-<button onclick="createTree()">Create</button>
+<div id="tabarruk" class="section">
+<h3>Tabarruk</h3>
+<div id="tabarrukList"></div>
+<button onclick="saveTabarruk()">Save</button>
+</div>
 
+<div id="birthdays" class="section">
+<input id="bName"><input id="bDate" type="date">
+<button onclick="addBirthday()">Add</button>
+<div id="bList"></div>
+</div>
+
+<div id="ann" class="section">
+<input id="aTitle"><input id="aText">
+<input id="aFrom" type="datetime-local">
+<input id="aTo" type="datetime-local">
+<button onclick="addAnn()">Add</button>
+<div id="aList"></div>
+</div>
+
+<div id="tree" class="section">
+<input id="treeName"><button onclick="createTree()">Create</button>
 <select id="treeSelect"></select>
 
-<h3>Add Person</h3>
 <input id="pName">
 <select id="pTree"></select>
 <select id="pFather"></select>
@@ -43,6 +60,8 @@
 </div>
 
 </div>
+
+<div id="toast"></div>
 
 <script src="script.js"></script>
 </body>
