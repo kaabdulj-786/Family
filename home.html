@@ -122,12 +122,16 @@ let tabData = {};
 let bdayData = {};
 let annData = {};
 let todayIndex = -1;
-
+let statusData = {};
 /* FETCH DATA */
 db.ref("mowlid").on("value", s=>{ mowlidData=s.val(); renderAll(); });
 db.ref("tabarruk").on("value", s=>{ tabData=s.val()||{}; renderAll(); });
 db.ref("birthdays").on("value", s=>{ bdayData=s.val()||{}; renderAll(); });
 db.ref("announcements").on("value", s=>{ annData=s.val()||{}; renderAll(); });
+  db.ref("mowlidStatus").on("value", snap=>{
+  statusData = snap.val() || {};
+  renderAll();
+});
 
 function renderAll(){
 
