@@ -29,51 +29,45 @@ body{
 
 .title{font-weight:bold;font-size:18px;color:#1f2937;}
 
-/* CONTAINER */
-.container{padding:20px;}
+.container{
+  padding:25px;
+  max-width:1100px;
+  margin:auto;
+}
 
-/* SECTION */
 .section-title{
-  font-size:18px;
+  font-size:20px;
   font-weight:600;
-  margin:25px 5px 10px;
-  color:#1f2937;
+  margin:30px 0 15px;
 }
 
 /* CARD */
 .card{
   background:white;
   padding:18px;
-  border-radius:16px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.06);
+  border-radius:18px;
+  box-shadow:0 8px 25px rgba(0,0,0,0.06);
   margin-bottom:15px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  transition:0.2s;
 }
-
-.card:hover{transform:translateY(-2px);}
 
 /* GRID */
 .grid{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
   gap:15px;
 }
 
 .box{
   background:white;
   padding:15px;
-  border-radius:12px;
-  box-shadow:0 3px 10px rgba(0,0,0,0.05);
+  border-radius:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+  text-align:center;
 }
 
-/* STATES */
 .today{
   border:2px solid #16a34a;
   background:#ecfdf5;
-  transform:scale(1.03);
 }
 
 .completed{
@@ -81,32 +75,80 @@ body{
   text-decoration:line-through;
 }
 
-/* BADGE */
-.badge{
-  padding:4px 10px;
-  border-radius:20px;
-  font-size:12px;
-  font-weight:500;
+.small{font-size:12px;color:gray;}
+
+/* 🌳 TREE */
+.tree-tabs{
+  margin-bottom:15px;
 }
 
-.badge-upcoming{background:#fef3c7;color:#92400e;}
-.badge-started{background:#dbeafe;color:#1e40af;}
-.badge-completed{background:#dcfce7;color:#166534;}
+.tree-tab{
+  padding:8px 15px;
+  border-radius:20px;
+  background:#e2e8f0;
+  margin-right:10px;
+  cursor:pointer;
+}
 
-/* BUTTON */
-button{
-  padding:8px 16px;
-  border:none;
-  border-radius:25px;
+.tree-tab.active{
   background:#0f766e;
   color:white;
-  cursor:pointer;
-  transition:0.2s;
 }
 
-button:hover{background:#115e59;}
+.tree-level{
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  margin:40px 0;
+  position:relative;
+}
 
-.small{font-size:12px;color:gray;}
+/* LINES */
+.tree-level::before{
+  content:"";
+  position:absolute;
+  top:-20px;
+  left:0;
+  right:0;
+  height:2px;
+  background:#cbd5e1;
+}
+
+/* PERSON */
+.person{
+  background:white;
+  padding:12px 18px;
+  border-radius:14px;
+  box-shadow:0 4px 15px rgba(0,0,0,0.05);
+  text-align:center;
+  position:relative;
+}
+
+/* vertical line */
+.person::before{
+  content:"";
+  position:absolute;
+  top:-20px;
+  left:50%;
+  width:2px;
+  height:20px;
+  background:#cbd5e1;
+}
+
+.person b{
+  display:block;
+}
+
+.person small{
+  font-size:11px;
+  color:gray;
+}
+
+/* LINKED */
+.linked{
+  border:2px solid #16a34a;
+  background:#f0fdf4;
+}
 
 /* POPUP */
 .popup{
@@ -123,7 +165,6 @@ button:hover{background:#115e59;}
   background:white;
   padding:25px;
   border-radius:16px;
-  text-align:center;
 }
 </style>
 
@@ -143,77 +184,51 @@ button:hover{background:#115e59;}
 
 <div class="container">
 
-  <div class="section-title">📢 Announcements</div>
-  <div id="announcementSection"></div>
+<div class="section-title">📢 Announcements</div>
+<div id="announcementSection"></div>
 
-  <div class="section-title">🕌 Mowlid</div>
-  <div id="mowlidSection"></div>
+<div class="section-title">🕌 Mowlid</div>
+<div id="mowlidSection"></div>
 
-  <div class="section-title">🍽️ Tabarruk</div>
-  <div id="tabarrukSection"></div>
+<div class="section-title">🍽️ Tabarruk</div>
+<div id="tabarrukSection"></div>
 
-  <div class="section-title">🎂 Today’s Birthdays</div>
-  <div id="birthdaySection"></div>
+<div class="section-title">🎂 Today’s Birthdays</div>
+<div id="birthdaySection"></div>
+
+<div class="section-title">🌳 Family Tree</div>
+<div id="treeTabs" class="tree-tabs"></div>
+<div id="treeView"></div>
 
 </div>
 
-<!-- CONTROL POPUP -->
-<div id="controlPopup" class="popup">
-  <div class="popup-box">
-    <h3>Control</h3>
-    <button onclick="startToday()">Start</button><br><br>
-    <button onclick="completeToday()">Complete</button><br><br>
-    <button onclick="resetToday()">Reset</button><br><br>
-    <button onclick="closeControl()">Close</button>
-  </div>
-</div>
-
-<!-- BIRTHDAY POPUP -->
 <div id="birthdayPopup" class="popup">
   <div class="popup-box">
     <h3>Family Birthdays</h3>
-    <div id="birthdayList"></div><br>
+    <div id="birthdayList"></div>
     <button onclick="closeBirthday()">Close</button>
   </div>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
-  authDomain: "family-6889b.firebaseapp.com",
-  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
-  projectId: "family-6889b"
+  apiKey: "AIzaSy...",
+  authDomain: "...",
+  databaseURL: "...",
+  projectId: "..."
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let mowlidData=null, tabData={}, bdayData={}, annData={}, statusData={};
-let todayIndex=-1;
+let mowlidData=null, tabData={}, bdayData={}, annData={}, treeData={}, peopleData={};
+let currentTree=null, todayIndex=-1;
 
 /* LISTENERS */
-db.ref("mowlid").on("value", s=>{mowlidData=s.val();renderAll();});
-db.ref("tabarruk").on("value", s=>{tabData=s.val()||{};renderAll();});
-db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};renderAll();});
 db.ref("announcements").on("value", s=>{annData=s.val()||{};renderAll();});
-db.ref("mowlidStatus").on("value", s=>{statusData=s.val()||{};renderAll();});
-
-/* CONTROL */
-function startToday(){
-  if(todayIndex<0)return;
-  db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"started",completedAt:null});
-}
-function completeToday(){
-  if(todayIndex<0)return;
-  db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"completed",completedAt:Date.now()});
-}
-function resetToday(){
-  if(todayIndex<0)return;
-  db.ref("mowlidStatus/day"+(todayIndex+1)).remove();
-}
-
-function openControl(){controlPopup.style.display="flex";}
-function closeControl(){controlPopup.style.display="none";}
+db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};renderAll();});
+db.ref("trees").on("value", s=>{treeData=s.val()||{};renderTabs();});
+db.ref("people").on("value", s=>{peopleData=s.val()||{};renderTree();});
 
 /* BIRTHDAY POPUP */
 function openBirthday(){
@@ -226,143 +241,125 @@ function openBirthday(){
 }
 function closeBirthday(){birthdayPopup.style.display="none";}
 
-/* MAIN */
+/* RENDER MAIN */
 function renderAll(){
+  let now=new Date();
+  let aHTML="", bHTML="";
 
-let now=new Date();
-let hasMowlid=mowlidData!=null;
+  for(let i in annData){
+    let f=new Date(annData[i].from);
+    let t=new Date(annData[i].to);
 
-let mHTML="",tHTML="",bHTML="",aHTML="";
-
-/* ANNOUNCEMENTS */
-for(let i in annData){
-  let f=new Date(annData[i].from);
-  let t=new Date(annData[i].to);
-
-  if(now>=f && now<=t){
-    aHTML+=`
-    <div class="card">
-      <div>
-        <b>${annData[i].title}</b><br>
-        ${annData[i].text}<br>
-        <span class="small">
-          ${f.toDateString()} - ${t.toDateString()}
-        </span>
-      </div>
-    </div>`;
-  }
-}
-
-/* BIRTHDAY */
-let today=new Date(),found=false;
-
-for(let i in bdayData){
-  let d=new Date(bdayData[i].dob);
-
-  if(d.getDate()==today.getDate() && d.getMonth()==today.getMonth()){
-    found=true;
-
-    let age = today.getFullYear() - d.getFullYear();
-
-    bHTML+=`
-    <div class="card">
-      <div>
-        <b>${bdayData[i].name}</b><br>
-        <span class="small">Turns ${age} 🎂</span><br>
-        <span class="small">🎉 Happy Birthday! May Allah bless you</span>
-      </div>
-    </div>`;
-  }
-}
-
-if(!found){
-  bHTML=`<div class="card">No birthdays today 🎈</div>`;
-}
-
-/* MOWLID */
-if(hasMowlid){
-
-let start=new Date(mowlidData.start);
-let end=new Date(start);
-end.setDate(end.getDate()+mowlidData.days-1);
-
-let diff=Math.floor((now-start)/(1000*60*60*24));
-
-todayIndex=-1;
-if(diff>=0&&diff<mowlidData.days) todayIndex=diff;
-if(diff>=mowlidData.days) todayIndex=mowlidData.days-1;
-
-let status="Upcoming";
-let key="day"+(todayIndex+1);
-
-if(todayIndex>=0&&todayIndex<mowlidData.days){
-  status="Not Started";
-  let s=statusData[key];
-
-  if(s){
-    if(s.status==="started") status="Started / Ongoing";
-    if(s.status==="completed"){
-      let hrs=(Date.now()-s.completedAt)/(1000*60*60);
-      if(hrs<=6) status="Completed";
-      else{
-        status="Not Started";
-        db.ref("mowlidStatus/"+key).remove();
-      }
+    if(now>=f && now<=t){
+      aHTML+=`<div class="card">
+      <b>${annData[i].title}</b><br>
+      ${annData[i].text}<br>
+      <span class="small">${f.toDateString()} - ${t.toDateString()}</span>
+      </div>`;
     }
   }
-}else if(todayIndex>=mowlidData.days){
-  status="Completed";
-}
 
-let badgeClass =
-  status.includes("Completed") ? "badge-completed" :
-  status.includes("Started") ? "badge-started" :
-  "badge-upcoming";
+  let today=new Date(),found=false;
 
-mHTML=`
-<div class="card">
-  <div>
-    <b>${mowlidData.name}</b><br>
-    <span class="small">${start.toDateString()} - ${end.toDateString()}</span><br>
-    <span class="small">${todayIndex>=0?"Day "+(todayIndex+1):"Upcoming"}</span>
-  </div>
+  for(let i in bdayData){
+    let d=new Date(bdayData[i].dob);
 
-  <div style="text-align:right">
-    <span class="badge ${badgeClass}">${status}</span><br><br>
-    <span onclick="openControl()" style="cursor:pointer">⚙️</span>
-  </div>
-</div>`;
+    if(d.getDate()==today.getDate() && d.getMonth()==today.getMonth()){
+      found=true;
+      let age=today.getFullYear()-d.getFullYear();
 
-let i=0,grid=`<div class="grid">`;
+      bHTML+=`<div class="card">
+      <b>${bdayData[i].name}</b><br>
+      <span class="small">Turns ${age} 🎂</span><br>
+      <span class="small">🎉 Happy Birthday! May Allah bless you</span>
+      </div>`;
+    }
+  }
 
-for(let k in tabData){
-  let cls="box";
-  if(i===todayIndex) cls+=" today";
-  if(i<todayIndex) cls+=" completed";
+  if(!found) bHTML=`<div class="card">No birthdays today</div>`;
 
-  grid+=`<div class="${cls}">
-    <b>Day ${i+1}</b><br>
-    ${tabData[k].name||"-"}<br>
-    <span class="small">${tabData[k].remarks||""}</span>
-  </div>`;
-  i++;
-}
-
-grid+="</div>";
-tHTML=grid;
-}
-
-/* ORDER */
-if(hasMowlid){
-  mowlidSection.innerHTML=mHTML;
-  tabarrukSection.innerHTML=tHTML;
-  birthdaySection.innerHTML=bHTML;
-  announcementSection.innerHTML=aHTML;
-}else{
   announcementSection.innerHTML=aHTML;
   birthdaySection.innerHTML=bHTML;
-  mowlidSection.innerHTML=`<div class="card">🕌 No Mowlid Scheduled</div>`;
 }
+
+/* TREE */
+function renderTabs(){
+  let html="";
+  for(let id in treeData){
+    html+=`<span class="tree-tab ${id===currentTree?'active':''}" onclick="selectTree('${id}')">${treeData[id].name}</span>`;
+  }
+  treeTabs.innerHTML=html;
+
+  if(!currentTree){
+    currentTree=Object.keys(treeData)[0];
+    renderTree();
+  }
+}
+
+function selectTree(id){
+  currentTree=id;
+  renderTabs();
+  renderTree();
+}
+
+function renderTree(){
+  if(!currentTree) return;
+
+  let people=[];
+  for(let id in peopleData){
+    if(peopleData[id].tree===currentTree){
+      people.push({...peopleData[id],id});
+    }
+  }
+
+  let levels=[];
+  let root=people.filter(p=>!p.father);
+  levels.push(root);
+
+  let current=root;
+
+  while(current.length){
+    let next=[];
+    current.forEach(p=>{
+      people.forEach(c=>{
+        if(c.father===p.id) next.push(c);
+      });
+    });
+    if(next.length) levels.push(next);
+    current=next;
+  }
+
+  function linked(name){
+    let c=0;
+    for(let i in peopleData){
+      if(peopleData[i].name===name) c++;
+    }
+    return c>1;
+  }
+
+  let html="";
+
+  levels.forEach(level=>{
+    html+=`<div class="tree-level">`;
+
+    level.forEach(p=>{
+      let father=p.father&&peopleData[p.father]?peopleData[p.father].name:"";
+      let spouse=p.spouse&&peopleData[p.spouse]?peopleData[p.spouse].name:"";
+
+      html+=`
+      <div class="person ${linked(p.name)?'linked':''}">
+        <b>${p.name}</b>
+        <small>
+          ${father?"S/o "+father:""}
+          ${spouse?"<br>Spouse: "+spouse:""}
+        </small>
+      </div>`;
+    });
+
+    html+=`</div>`;
+  });
+
+  treeView.innerHTML=html;
 }
 </script>
 
