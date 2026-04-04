@@ -14,7 +14,7 @@ console.log("JS Loaded");
 // MOWLID SAVE
 function saveMowlid(){
 const name = document.getElementById("mName").value;
-const days = document.getElementById("mDays").value;
+const days = parseInt(document.getElementById("mDays").value);
 const start = document.getElementById("mStart").value;
 
 db.ref("mowlid").set({
@@ -29,6 +29,10 @@ alert("Mowlid Saved");
 }
 
 // TABARRUK GENERATE
+if(!days || !start){
+  alert("Enter valid days and date");
+  return;
+}
 function generateTabarruk(days, start){
 const container = document.getElementById("tabarrukList");
 container.innerHTML = "";
