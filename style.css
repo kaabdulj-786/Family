@@ -1,1 +1,68 @@
+body {
+font-family: Arial;
+margin: 0;
+background: #f4f7fb;
+}
+
+/* LOGIN */
+.login-body {
+display: flex;
+justify-content: center;
+align-items: center;
+height: 100vh;
+}
+
+.login-container {
+text-align: center;
+background: white;
+padding: 40px;
+border-radius: 12px;
+box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+.logo-main {
+width: 120px;
+margin-bottom: 20px;
+}
+
+/* NAVBAR */
+.navbar {
+background: #1e3a8a;
+color: white;
+padding: 15px;
+display: flex;
+align-items: center;
+}
+
+.logo-small {
+width: 40px;
+margin-right: 10px;
+}
+
+/* CONTENT */
+.container {
+padding: 20px;
+}
+
+.card {
+background: white;
+padding: 20px;
+margin-bottom: 20px;
+border-radius: 10px;
+}
+
+input {
+display: block;
+margin: 10px 0;
+padding: 8px;
+width: 100%;
+}
+
+button {
+padding: 10px;
+background: #1e3a8a;
+color: white;
+border: none;
+cursor: pointer;
+}
 
