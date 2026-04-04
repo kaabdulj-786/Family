@@ -32,7 +32,7 @@ body{
 /* CONTAINER */
 .container{padding:20px;}
 
-/* SECTION TITLE */
+/* SECTION */
 .section-title{
   font-size:18px;
   font-weight:600;
@@ -124,7 +124,6 @@ button:hover{background:#115e59;}
   padding:25px;
   border-radius:16px;
   text-align:center;
-  min-width:250px;
 }
 </style>
 
@@ -179,15 +178,15 @@ button:hover{background:#115e59;}
 </div>
 
 <script>
-const firebaseConfig={
-  apiKey:"AIzaSy...",
-  authDomain:"family-6889b.firebaseapp.com",
-  databaseURL:"https://family-6889b-default-rtdb.firebaseio.com",
-  projectId:"family-6889b"
+const firebaseConfig = {
+  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+  authDomain: "family-6889b.firebaseapp.com",
+  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
+  projectId: "family-6889b"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
+const db = firebase.database();
 
 let mowlidData=null, tabData={}, bdayData={}, annData={}, statusData={};
 let todayIndex=-1;
@@ -204,12 +203,10 @@ function startToday(){
   if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"started",completedAt:null});
 }
-
 function completeToday(){
   if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"completed",completedAt:Date.now()});
 }
-
 function resetToday(){
   if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).remove();
@@ -221,14 +218,12 @@ function closeControl(){controlPopup.style.display="none";}
 /* BIRTHDAY POPUP */
 function openBirthday(){
   birthdayPopup.style.display="flex";
-
   let html="";
   for(let i in bdayData){
     html+=`<div>${bdayData[i].name}</div>`;
   }
   birthdayList.innerHTML=html;
 }
-
 function closeBirthday(){birthdayPopup.style.display="none";}
 
 /* MAIN */
@@ -239,34 +234,58 @@ let hasMowlid=mowlidData!=null;
 
 let mHTML="",tHTML="",bHTML="",aHTML="";
 
-/* ANNOUNCEMENT */
+/* ANNOUNCEMENTS */
 for(let i in annData){
   let f=new Date(annData[i].from);
   let t=new Date(annData[i].to);
-  if(now>=f&&now<=t){
-    aHTML+=`<div class="card"><div><b>${annData[i].title}</b><br>${annData[i].text}</div></div>`;
+
+  if(now>=f && now<=t){
+    aHTML+=`
+    <div class="card">
+      <div>
+        <b>${annData[i].title}</b><br>
+        ${annData[i].text}<br>
+        <span class="small">
+          ${f.toDateString()} - ${t.toDateString()}
+        </span>
+      </div>
+    </div>`;
   }
 }
 
-/* BIRTHDAY TODAY */
+/* BIRTHDAY */
 let today=new Date(),found=false;
 
 for(let i in bdayData){
   let d=new Date(bdayData[i].dob);
-  if(d.getDate()==today.getDate()&&d.getMonth()==today.getMonth()){
+
+  if(d.getDate()==today.getDate() && d.getMonth()==today.getMonth()){
     found=true;
-    bHTML+=`<div class="card"><div><b>${bdayData[i].name}</b><br><span class="small">🎉 Barakallahu feekum</span></div></div>`;
+
+    let age = today.getFullYear() - d.getFullYear();
+
+    bHTML+=`
+    <div class="card">
+      <div>
+        <b>${bdayData[i].name}</b><br>
+        <span class="small">Turns ${age} 🎂</span><br>
+        <span class="small">🎉 Happy Birthday! May Allah bless you</span>
+      </div>
+    </div>`;
   }
 }
 
 if(!found){
-  bHTML=`<div class="card"><div>No birthdays today</div></div>`;
+  bHTML=`<div class="card">No birthdays today 🎈</div>`;
 }
 
 /* MOWLID */
 if(hasMowlid){
 
 let start=new Date(mowlidData.start);
+let end=new Date(start);
+end.setDate(end.getDate()+mowlidData.days-1);
+
 let diff=Math.floor((now-start)/(1000*60*60*24));
 
 todayIndex=-1;
@@ -295,17 +314,16 @@ if(todayIndex>=0&&todayIndex<mowlidData.days){
   status="Completed";
 }
 
-/* STATUS BADGE */
 let badgeClass =
   status.includes("Completed") ? "badge-completed" :
   status.includes("Started") ? "badge-started" :
   "badge-upcoming";
 
-/* UI */
 mHTML=`
 <div class="card">
   <div>
     <b>${mowlidData.name}</b><br>
+    <span class="small">${start.toDateString()} - ${end.toDateString()}</span><br>
     <span class="small">${todayIndex>=0?"Day "+(todayIndex+1):"Upcoming"}</span>
   </div>
 
@@ -315,7 +333,6 @@ mHTML=`
   </div>
 </div>`;
 
-/* TABARRUK */
 let i=0,grid=`<div class="grid">`;
 
 for(let k in tabData){
