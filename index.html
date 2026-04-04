@@ -89,11 +89,22 @@ button{
   </div>
 
   <input type="text" id="username" placeholder="Username">
- <div style="position:relative;">
-  <input type="password" id="password" placeholder="Password" style="padding-right:40px;">
-  <span onclick="togglePassword()" 
-        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
-    👁️
+<div style="position:relative;">
+  <input type="password" id="password" placeholder="Password" style="padding-right:60px;">
+  
+  <span id="toggleText"
+        onclick="togglePassword()"
+        style="
+          position:absolute;
+          right:10px;
+          top:50%;
+          transform:translateY(-50%);
+          cursor:pointer;
+          font-size:13px;
+          color:#0f766e;
+          font-weight:500;
+        ">
+    Show
   </span>
 </div>
 
@@ -148,20 +159,18 @@ function login(){
     }
   }
 }
-/* 👁️ TOGGLE PASSWORD (ADD THIS PART) */
 function togglePassword(){
   let pass = document.getElementById("password");
-  let icon = document.getElementById("eyeIcon");
+  let text = document.getElementById("toggleText");
 
   if(pass.type === "password"){
     pass.type = "text";
-    icon.innerText = "🙈";
+    text.innerText = "Hide";
   }else{
     pass.type = "password";
-    icon.innerText = "👁️";
+    text.innerText = "Show";
   }
 }
-
 /* AUTO LOGIN */
 window.onload=function(){
   if(localStorage.getItem("familyLogin")==="true"){
