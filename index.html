@@ -6,7 +6,7 @@
 <style>
 body{
   margin:0;
-  font-family:'Segoe UI';
+  font-family:Arial;
   height:100vh;
   display:flex;
   justify-content:center;
@@ -14,91 +14,60 @@ body{
   background:linear-gradient(135deg,#0f766e,#1e3a8a);
 }
 
-/* LOGIN BOX */
 .login-box{
   width:320px;
   padding:30px;
-  background:rgba(255,255,255,0.95);
-  border-radius:18px;
-  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  background:white;
+  border-radius:15px;
   text-align:center;
 }
 
-/* LOGO */
 .logo{
-  width:70px;
+  width:60px;
   margin-bottom:10px;
 }
 
-/* TITLE */
-.title{
-  font-size:20px;
-  font-weight:600;
-  margin-bottom:20px;
-}
-
-/* TABS */
 .tabs{
   display:flex;
-  margin-bottom:20px;
-  border-radius:10px;
-  overflow:hidden;
+  margin-bottom:15px;
 }
 
 .tab{
   flex:1;
   padding:10px;
+  background:#ddd;
   cursor:pointer;
-  background:#e5e7eb;
 }
 
 .tab.active{
   background:#0f766e;
   color:white;
-  font-weight:500;
 }
 
-/* INPUT */
 input{
   width:100%;
   padding:10px;
   margin:8px 0;
-  border-radius:10px;
+  border-radius:8px;
   border:1px solid #ccc;
-  outline:none;
 }
 
-/* BUTTON */
 button{
   width:100%;
   padding:10px;
   border:none;
-  border-radius:25px;
+  border-radius:20px;
   background:#0f766e;
   color:white;
-  cursor:pointer;
   margin-top:10px;
-  transition:0.2s;
+  cursor:pointer;
 }
 
-button:hover{
-  background:#115e59;
-}
-
-/* REMEMBER */
 .remember{
-  display:flex;
-  align-items:center;
   font-size:13px;
   margin-top:5px;
 }
 
-.remember input{
-  width:auto;
-  margin-right:5px;
-}
-
-/* ERROR */
 .error{
   color:red;
   font-size:13px;
@@ -113,19 +82,17 @@ button:hover{
 <div class="login-box">
 
   <img src="logo.png" class="logo">
-  <div class="title">Family Portal</div>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('family')">Family</div>
-    <div class="tab" onclick="switchTab('admin')">Admin</div>
+    <div class="tab active" onclick="switchTab('family', this)">Family</div>
+    <div class="tab" onclick="switchTab('admin', this)">Admin</div>
   </div>
 
   <input type="text" id="username" placeholder="Username">
   <input type="password" id="password" placeholder="Password">
 
   <div id="rememberBox" class="remember">
-    <input type="checkbox" id="remember">
-    Remember Me
+    <input type="checkbox" id="remember"> Remember Me
   </div>
 
   <button onclick="login()">Login</button>
@@ -135,66 +102,53 @@ button:hover{
 </div>
 
 <script>
+let mode="family";
 
-let mode = "family";
-
-/* SWITCH TAB */
-function switchTab(type){
-  mode = type;
+function switchTab(type, el){
+  mode=type;
 
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  event.target.classList.add("active");
+  el.classList.add("active");
 
-  // Show remember only for family
   document.getElementById("rememberBox").style.display =
-    (mode === "family") ? "flex" : "none";
+    (mode==="family")?"block":"none";
 
   document.getElementById("error").innerText="";
 }
 
-/* LOGIN */
 function login(){
 
-  let user = document.getElementById("username").value;
-  let pass = document.getElementById("password").value;
+  let user=document.getElementById("username").value;
+  let pass=document.getElementById("password").value;
 
-  if(mode === "family"){
-
+  if(mode==="family"){
     if(user==="Kathiri House" && pass==="Kathiri@786"){
 
       if(document.getElementById("remember").checked){
         localStorage.setItem("familyLogin","true");
       }
 
-      window.location.href = "home.html";
+      window.location.href="home.html";
 
     }else{
-      showError("Invalid Family Login");
+      document.getElementById("error").innerText="Invalid Family Login";
     }
 
   }else{
-
     if(user==="KathiriAdmin" && pass==="Kathiriadmin@786#"){
-      window.location.href = "admin.html";
+      window.location.href="admin.html";
     }else{
-      showError("Invalid Admin Login");
+      document.getElementById("error").innerText="Invalid Admin Login";
     }
-
   }
 }
 
-/* ERROR */
-function showError(msg){
-  document.getElementById("error").innerText = msg;
-}
-
-/* AUTO LOGIN (REMEMBER) */
-window.onload = function(){
+/* AUTO LOGIN */
+window.onload=function(){
   if(localStorage.getItem("familyLogin")==="true"){
-    window.location.href = "home.html";
+    window.location.href="home.html";
   }
 }
-
 </script>
 
 </body>
