@@ -8,14 +8,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+let editId = null;
+
+// SECTION SWITCH
 function showSection(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
 showSection("mowlid");
 
+// TOAST
+function showToast(msg){
+  let t = document.getElementById("toast");
+  t.innerText = msg;
+  t.style.display = "block";
+  setTimeout(()=>t.style.display="none",2000);
+}
 
-// 🔹 MOWLID
+// 🕌 MOWLID
 function saveMowlid(){
   const name = mName.value;
   const days = parseInt(mDays.value);
@@ -27,20 +37,36 @@ function saveMowlid(){
   }
 
   db.ref("mowlid").set({name, days, start});
-
   generateTabarruk(days, start);
+
+  showToast("Mowlid Saved");
+}
+
+function deleteMowlid(){
+  db.ref("mowlid").remove();
+  showToast("Deleted");
 }
 
 db.ref("mowlid").on("value", snap=>{
   let d = snap.val();
   if(!d) return;
 
-  mowlidDisplay.innerHTML =
-    `<div class="card"><b>${d.name}</b><br>${d.days} Days</div>`;
+  mName.value = d.name;
+  mDays.value = d.days;
+  mStart.value = d.start;
+
+  mowlidDisplay.innerHTML = `
+    <div class="card">
+      <b>${d.name}</b><br>
+      ${d.days} Days
+      <br><button onclick="deleteMowlid()">Delete</button>
+    </div>
+  `;
+
+  generateTabarruk(d.days, d.start);
 });
 
-
-// 🔹 TABARRUK
+// 🍽 TABARRUK
 function generateTabarruk(days, start){
   tabarrukList.innerHTML = "";
 
@@ -77,17 +103,20 @@ function saveTabarruk(){
   }
 
   db.ref("tabarruk").set(data);
+  showToast("Tabarruk Saved");
 }
 
-
-// 🔹 BIRTHDAYS
+// 🎂 BIRTHDAY
 function addBirthday(){
-  let id = Date.now();
+  let id = editId || Date.now();
 
   db.ref("birthdays/"+id).set({
     name: bName.value,
     dob: bDate.value
   });
+
+  editId = null;
+  showToast("Saved");
 }
 
 db.ref("birthdays").on("value", snap=>{
@@ -100,6 +129,7 @@ db.ref("birthdays").on("value", snap=>{
 
     div.innerHTML = `
       ${data[i].name}
+      <button onclick="editBirthday('${i}','${data[i].name}','${data[i].dob}')">Edit</button>
       <button onclick="deleteBirthday('${i}')">Delete</button>
     `;
 
@@ -107,14 +137,20 @@ db.ref("birthdays").on("value", snap=>{
   }
 });
 
-function deleteBirthday(id){
-  db.ref("birthdays/"+id).remove();
+function editBirthday(id,name,dob){
+  editId = id;
+  bName.value = name;
+  bDate.value = dob;
 }
 
+function deleteBirthday(id){
+  db.ref("birthdays/"+id).remove();
+  showToast("Deleted");
+}
 
-// 🔹 ANNOUNCEMENTS
+// 📢 ANNOUNCEMENTS
 function addAnnouncement(){
-  let id = Date.now();
+  let id = editId || Date.now();
 
   db.ref("announcements/"+id).set({
     title: aTitle.value,
@@ -122,13 +158,9 @@ function addAnnouncement(){
     from: aFrom.value,
     to: aTo.value
   });
-}
 
-function getStatus(from,to){
-  let now = new Date();
-  if(now < new Date(from)) return "Upcoming";
-  if(now > new Date(to)) return "Expired";
-  return "Active";
+  editId = null;
+  showToast("Saved");
 }
 
 db.ref("announcements").on("value", snap=>{
@@ -136,14 +168,13 @@ db.ref("announcements").on("value", snap=>{
   let data = snap.val();
 
   for(let i in data){
-    let status = getStatus(data[i].from, data[i].to);
-
     let div = document.createElement("div");
     div.className = "card";
 
     div.innerHTML = `
-      <b>${data[i].title}</b> (${status})<br>
+      <b>${data[i].title}</b><br>
       ${data[i].text}
+      <button onclick="editAnnouncement('${i}','${data[i].title}','${data[i].text}','${data[i].from}','${data[i].to}')">Edit</button>
       <button onclick="deleteAnnouncement('${i}')">Delete</button>
     `;
 
@@ -151,12 +182,22 @@ db.ref("announcements").on("value", snap=>{
   }
 });
 
-function deleteAnnouncement(id){
-  db.ref("announcements/"+id).remove();
+function editAnnouncement(id,title,text,from,to){
+  editId = id;
+  aTitle.value = title;
+  aText.value = text;
+  aFrom.value = from;
+  aTo.value = to;
 }
 
+function deleteAnnouncement(id){
+  db.ref("announcements/"+id).remove();
+  showToast("Deleted");
+}
 
-// 🔹 FAMILY TREE (BASE)
+// 🌳 FAMILY TREE
+let currentTree = null;
+
 function createTree(){
   let id = Date.now();
   db.ref("trees/"+id).set({name: treeName.value});
@@ -174,13 +215,59 @@ db.ref("trees").on("value", snap=>{
   }
 });
 
+treeSelect.onchange = ()=>{
+  currentTree = treeSelect.value;
+  loadPeople();
+};
+
 function addPerson(){
+  if(!currentTree){
+    alert("Select tree");
+    return;
+  }
+
   let id = Date.now();
 
   db.ref("people/"+id).set({
     name: pName.value,
     father: pFather.value,
     spouse: pSpouse.value,
-    gender: pGender.value
+    gender: pGender.value,
+    tree: currentTree
   });
+
+  showToast("Person Added");
+}
+
+function loadPeople(){
+  db.ref("people").on("value", snap=>{
+    peopleList.innerHTML = "";
+    pFather.innerHTML = `<option value="">No Father</option>`;
+    pSpouse.innerHTML = `<option value="">No Spouse</option>`;
+
+    let data = snap.val();
+
+    for(let i in data){
+      if(data[i].tree !== currentTree) continue;
+
+      let div = document.createElement("div");
+      div.className = "card";
+
+      div.innerHTML = `
+        <b>${data[i].name}</b>
+        <button onclick="deletePerson('${i}')">Delete</button>
+      `;
+
+      peopleList.appendChild(div);
+
+      let opt = `<option value="${i}">${data[i].name}</option>`;
+      pFather.innerHTML += opt;
+      pSpouse.innerHTML += opt;
+    }
+  });
+}
+
+function deletePerson(id){
+  db.ref("people/"+id).remove();
+  showToast("Deleted");
 }
