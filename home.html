@@ -4,17 +4,17 @@
 <title>Illath Al Kathiri</title>
 
 <style>
-body {
+body{
   margin:0;
   font-family:'Segoe UI';
-  background:#f4f7fb;
+  background:#f1f5f9;
 }
 
 /* HEADER */
 .header{
   display:flex;
-  align-items:center;
   justify-content:space-between;
+  align-items:center;
   padding:15px 25px;
   background:white;
   box-shadow:0 2px 10px rgba(0,0,0,0.05);
@@ -27,22 +27,33 @@ body {
 
 .logo{width:50px;margin-right:10px;}
 
-.title{font-weight:bold;font-size:18px;}
+.title{font-weight:bold;font-size:18px;color:#1f2937;}
 
 /* CONTAINER */
 .container{padding:20px;}
 
+/* SECTION TITLE */
+.section-title{
+  font-size:18px;
+  font-weight:600;
+  margin:25px 5px 10px;
+  color:#1f2937;
+}
+
 /* CARD */
 .card{
   background:white;
-  padding:20px;
+  padding:18px;
   border-radius:16px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.05);
-  margin-bottom:20px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.06);
+  margin-bottom:15px;
   display:flex;
   justify-content:space-between;
   align-items:center;
+  transition:0.2s;
 }
+
+.card:hover{transform:translateY(-2px);}
 
 /* GRID */
 .grid{
@@ -58,20 +69,42 @@ body {
   box-shadow:0 3px 10px rgba(0,0,0,0.05);
 }
 
-.today{border:2px solid green;}
-.completed{opacity:0.6;}
-
-button{
-  padding:8px 14px;
-  border:none;
-  border-radius:10px;
-  background:#1e3a8a;
-  color:white;
-  cursor:pointer;
-  margin-top:5px;
+/* STATES */
+.today{
+  border:2px solid #16a34a;
+  background:#ecfdf5;
+  transform:scale(1.03);
 }
 
-button:hover{opacity:0.9;}
+.completed{
+  opacity:0.5;
+  text-decoration:line-through;
+}
+
+/* BADGE */
+.badge{
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+  font-weight:500;
+}
+
+.badge-upcoming{background:#fef3c7;color:#92400e;}
+.badge-started{background:#dbeafe;color:#1e40af;}
+.badge-completed{background:#dcfce7;color:#166534;}
+
+/* BUTTON */
+button{
+  padding:8px 16px;
+  border:none;
+  border-radius:25px;
+  background:#0f766e;
+  color:white;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{background:#115e59;}
 
 .small{font-size:12px;color:gray;}
 
@@ -110,13 +143,22 @@ button:hover{opacity:0.9;}
 </div>
 
 <div class="container">
+
+  <div class="section-title">📢 Announcements</div>
   <div id="announcementSection"></div>
+
+  <div class="section-title">🕌 Mowlid</div>
   <div id="mowlidSection"></div>
+
+  <div class="section-title">🍽️ Tabarruk</div>
   <div id="tabarrukSection"></div>
+
+  <div class="section-title">🎂 Today’s Birthdays</div>
   <div id="birthdaySection"></div>
+
 </div>
 
-<!-- MOWLID CONTROL POPUP -->
+<!-- CONTROL POPUP -->
 <div id="controlPopup" class="popup">
   <div class="popup-box">
     <h3>Control</h3>
@@ -137,8 +179,8 @@ button:hover{opacity:0.9;}
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey:"AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+const firebaseConfig={
+  apiKey:"AIzaSy...",
   authDomain:"family-6889b.firebaseapp.com",
   databaseURL:"https://family-6889b-default-rtdb.firebaseio.com",
   projectId:"family-6889b"
@@ -157,17 +199,19 @@ db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};renderAll();});
 db.ref("announcements").on("value", s=>{annData=s.val()||{};renderAll();});
 db.ref("mowlidStatus").on("value", s=>{statusData=s.val()||{};renderAll();});
 
-/* CONTROL FUNCTIONS */
+/* CONTROL */
 function startToday(){
-  if(todayIndex<0) return;
+  if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"started",completedAt:null});
 }
+
 function completeToday(){
-  if(todayIndex<0) return;
+  if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).set({status:"completed",completedAt:Date.now()});
 }
+
 function resetToday(){
-  if(todayIndex<0) return;
+  if(todayIndex<0)return;
   db.ref("mowlidStatus/day"+(todayIndex+1)).remove();
 }
 
@@ -184,6 +228,7 @@ function openBirthday(){
   }
   birthdayList.innerHTML=html;
 }
+
 function closeBirthday(){birthdayPopup.style.display="none";}
 
 /* MAIN */
@@ -192,28 +237,31 @@ function renderAll(){
 let now=new Date();
 let hasMowlid=mowlidData!=null;
 
-let mHTML="", tHTML="", bHTML="", aHTML="";
+let mHTML="",tHTML="",bHTML="",aHTML="";
 
-/* ANNOUNCEMENTS */
+/* ANNOUNCEMENT */
 for(let i in annData){
   let f=new Date(annData[i].from);
   let t=new Date(annData[i].to);
-  if(now>=f && now<=t){
+  if(now>=f&&now<=t){
     aHTML+=`<div class="card"><div><b>${annData[i].title}</b><br>${annData[i].text}</div></div>`;
   }
 }
 
 /* BIRTHDAY TODAY */
-let today=new Date(), found=false;
+let today=new Date(),found=false;
 
 for(let i in bdayData){
   let d=new Date(bdayData[i].dob);
-  if(d.getDate()==today.getDate() && d.getMonth()==today.getMonth()){
+  if(d.getDate()==today.getDate()&&d.getMonth()==today.getMonth()){
     found=true;
-    bHTML+=`<div class="card"><div><b>${bdayData[i].name}</b><br>🎉 Barakallahu feekum</div></div>`;
+    bHTML+=`<div class="card"><div><b>${bdayData[i].name}</b><br><span class="small">🎉 Barakallahu feekum</span></div></div>`;
   }
 }
-if(!found) bHTML=`<div class="card">No birthdays today</div>`;
+
+if(!found){
+  bHTML=`<div class="card"><div>No birthdays today</div></div>`;
+}
 
 /* MOWLID */
 if(hasMowlid){
@@ -222,15 +270,13 @@ let start=new Date(mowlidData.start);
 let diff=Math.floor((now-start)/(1000*60*60*24));
 
 todayIndex=-1;
-if(diff>=0 && diff<mowlidData.days) todayIndex=diff;
+if(diff>=0&&diff<mowlidData.days) todayIndex=diff;
 if(diff>=mowlidData.days) todayIndex=mowlidData.days-1;
 
-/* STATUS */
 let status="Upcoming";
 let key="day"+(todayIndex+1);
 
-if(todayIndex>=0 && todayIndex<mowlidData.days){
-
+if(todayIndex>=0&&todayIndex<mowlidData.days){
   status="Not Started";
   let s=statusData[key];
 
@@ -245,35 +291,46 @@ if(todayIndex>=0 && todayIndex<mowlidData.days){
       }
     }
   }
-
 }else if(todayIndex>=mowlidData.days){
   status="Completed";
 }
+
+/* STATUS BADGE */
+let badgeClass =
+  status.includes("Completed") ? "badge-completed" :
+  status.includes("Started") ? "badge-started" :
+  "badge-upcoming";
 
 /* UI */
 mHTML=`
 <div class="card">
   <div>
     <b>${mowlidData.name}</b><br>
-    ${todayIndex>=0?"Day "+(todayIndex+1):"Upcoming"}
+    <span class="small">${todayIndex>=0?"Day "+(todayIndex+1):"Upcoming"}</span>
   </div>
 
-  <div>
-    ⚙️ <span onclick="openControl()" style="cursor:pointer;">Open</span><br>
-    ${status}
+  <div style="text-align:right">
+    <span class="badge ${badgeClass}">${status}</span><br><br>
+    <span onclick="openControl()" style="cursor:pointer">⚙️</span>
   </div>
 </div>`;
 
 /* TABARRUK */
-let i=0, grid=`<div class="grid">`;
+let i=0,grid=`<div class="grid">`;
+
 for(let k in tabData){
   let cls="box";
   if(i===todayIndex) cls+=" today";
   if(i<todayIndex) cls+=" completed";
 
-  grid+=`<div class="${cls}">Day ${i+1}<br>${tabData[k].name||"-"}</div>`;
+  grid+=`<div class="${cls}">
+    <b>Day ${i+1}</b><br>
+    ${tabData[k].name||"-"}<br>
+    <span class="small">${tabData[k].remarks||""}</span>
+  </div>`;
   i++;
 }
+
 grid+="</div>";
 tHTML=grid;
 }
