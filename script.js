@@ -8,109 +8,179 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-console.log("JS Loaded");
+function showSection(id){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+showSection("mowlid");
 
-// MOWLID SAVE
+
+// 🔹 MOWLID
 function saveMowlid(){
-  const name = document.getElementById("mName").value;
-  const days = parseInt(document.getElementById("mDays").value);
-  const start = document.getElementById("mStart").value;
+  const name = mName.value;
+  const days = parseInt(mDays.value);
+  const start = mStart.value;
 
-  if(!days || !start){
-    alert("Enter valid days and date");
+  if(!name || !days || !start){
+    alert("Fill all fields");
     return;
   }
 
-  db.ref("mowlid").set({
-    name: name,
-    days: days,
-    start: start
-  });
+  db.ref("mowlid").set({name, days, start});
 
   generateTabarruk(days, start);
-
-  alert("Mowlid Saved");
 }
 
-// TABARRUK GENERATE
+db.ref("mowlid").on("value", snap=>{
+  let d = snap.val();
+  if(!d) return;
+
+  mowlidDisplay.innerHTML =
+    `<div class="card"><b>${d.name}</b><br>${d.days} Days</div>`;
+});
+
+
+// 🔹 TABARRUK
 function generateTabarruk(days, start){
-  const container = document.getElementById("tabarrukList");
-  container.innerHTML = "";
+  tabarrukList.innerHTML = "";
 
   let s = new Date(start);
 
-  for(let i=0; i<days; i++){
+  for(let i=0;i<days;i++){
     let d = new Date(s);
-    d.setDate(d.getDate() + i);
+    d.setDate(d.getDate()+i);
 
     let div = document.createElement("div");
-    div.innerHTML = "Day " + (i+1) + " - " + d.toDateString();
+    div.className = "card";
 
-    let input = document.createElement("input");
-    input.placeholder = "Name";
+    div.innerHTML = `
+      Day ${i+1} - ${d.toDateString()}<br>
+      <input placeholder="Name">
+      <input placeholder="Remarks">
+    `;
 
-    div.appendChild(input);
-    container.appendChild(div);
+    tabarrukList.appendChild(div);
   }
 }
 
-// SAVE TABARRUK
 function saveTabarruk(){
-  const inputs = document.querySelectorAll("#tabarrukList input");
   let data = {};
+  let cards = tabarrukList.children;
 
-  inputs.forEach((inp, i)=>{
-    data["day" + (i+1)] = inp.value;
-  });
+  for(let i=0;i<cards.length;i++){
+    let inputs = cards[i].querySelectorAll("input");
+
+    data["day"+(i+1)] = {
+      name: inputs[0].value,
+      remarks: inputs[1].value
+    };
+  }
 
   db.ref("tabarruk").set(data);
-
-  alert("Tabarruk Saved");
 }
 
-// ADD BIRTHDAY
+
+// 🔹 BIRTHDAYS
 function addBirthday(){
   let id = Date.now();
 
-  db.ref("birthdays/" + id).set({
-    name: document.getElementById("bName").value,
-    date: document.getElementById("bDate").value
+  db.ref("birthdays/"+id).set({
+    name: bName.value,
+    dob: bDate.value
   });
 }
 
-// SHOW BIRTHDAYS
 db.ref("birthdays").on("value", snap=>{
-  const list = document.getElementById("birthdayList");
-  list.innerHTML = "";
-
+  birthdayList.innerHTML = "";
   let data = snap.val();
+
   for(let i in data){
-    let p = document.createElement("p");
-    p.innerText = data[i].name;
-    list.appendChild(p);
+    let div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      ${data[i].name}
+      <button onclick="deleteBirthday('${i}')">Delete</button>
+    `;
+
+    birthdayList.appendChild(div);
   }
 });
 
-// ADD ANNOUNCEMENT
+function deleteBirthday(id){
+  db.ref("birthdays/"+id).remove();
+}
+
+
+// 🔹 ANNOUNCEMENTS
 function addAnnouncement(){
   let id = Date.now();
 
-  db.ref("announcements/" + id).set({
-    text: document.getElementById("aText").value,
-    from: document.getElementById("aFrom").value,
-    to: document.getElementById("aTo").value
+  db.ref("announcements/"+id).set({
+    title: aTitle.value,
+    text: aText.value,
+    from: aFrom.value,
+    to: aTo.value
   });
 }
 
-// SHOW ANNOUNCEMENTS
-db.ref("announcements").on("value", snap=>{
-  const list = document.getElementById("announcementList");
-  list.innerHTML = "";
+function getStatus(from,to){
+  let now = new Date();
+  if(now < new Date(from)) return "Upcoming";
+  if(now > new Date(to)) return "Expired";
+  return "Active";
+}
 
+db.ref("announcements").on("value", snap=>{
+  announcementList.innerHTML = "";
   let data = snap.val();
+
   for(let i in data){
-    let p = document.createElement("p");
-    p.innerText = data[i].text;
-    list.appendChild(p);
+    let status = getStatus(data[i].from, data[i].to);
+
+    let div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <b>${data[i].title}</b> (${status})<br>
+      ${data[i].text}
+      <button onclick="deleteAnnouncement('${i}')">Delete</button>
+    `;
+
+    announcementList.appendChild(div);
   }
 });
+
+function deleteAnnouncement(id){
+  db.ref("announcements/"+id).remove();
+}
+
+
+// 🔹 FAMILY TREE (BASE)
+function createTree(){
+  let id = Date.now();
+  db.ref("trees/"+id).set({name: treeName.value});
+}
+
+db.ref("trees").on("value", snap=>{
+  treeSelect.innerHTML = "";
+  let data = snap.val();
+
+  for(let i in data){
+    let opt = document.createElement("option");
+    opt.value = i;
+    opt.innerText = data[i].name;
+    treeSelect.appendChild(opt);
+  }
+});
+
+function addPerson(){
+  let id = Date.now();
+
+  db.ref("people/"+id).set({
+    name: pName.value,
+    father: pFather.value,
+    spouse: pSpouse.value,
+    gender: pGender.value
+  });
+}
