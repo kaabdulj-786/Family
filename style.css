@@ -1,68 +1,68 @@
 body {
-font-family: Arial;
-margin: 0;
-background: #f4f7fb;
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  display: flex;
+  background: #f4f7fb;
 }
 
-/* LOGIN */
-.login-body {
-display: flex;
-justify-content: center;
-align-items: center;
-height: 100vh;
+.sidebar {
+  width: 220px;
+  background: #1e3a8a;
+  color: white;
+  height: 100vh;
+  padding: 20px;
 }
 
-.login-container {
-text-align: center;
-background: white;
-padding: 40px;
-border-radius: 12px;
-box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+.sidebar h2 {
+  margin-bottom: 20px;
 }
 
-.logo-main {
-width: 120px;
-margin-bottom: 20px;
+.sidebar button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  background: white;
+  color: #1e3a8a;
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
 }
 
-/* NAVBAR */
-.navbar {
-background: #1e3a8a;
-color: white;
-padding: 15px;
-display: flex;
-align-items: center;
+.main {
+  flex: 1;
+  padding: 20px;
 }
 
-.logo-small {
-width: 40px;
-margin-right: 10px;
+.section {
+  display: none;
 }
 
-/* CONTENT */
-.container {
-padding: 20px;
+.section.active {
+  display: block;
 }
 
-.card {
-background: white;
-padding: 20px;
-margin-bottom: 20px;
-border-radius: 10px;
-}
-
-input {
-display: block;
-margin: 10px 0;
-padding: 8px;
-width: 100%;
+input, select {
+  display: block;
+  margin: 10px 0;
+  padding: 10px;
+  width: 300px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 button {
-padding: 10px;
-background: #1e3a8a;
-color: white;
-border: none;
-cursor: pointer;
+  padding: 10px 15px;
+  background: #1e3a8a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
+.card {
+  background: white;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 8px;
+}
