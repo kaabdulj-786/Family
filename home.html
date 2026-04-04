@@ -4,18 +4,14 @@
 <title>Illath Al Kathiri</title>
 
 <style>
-body{margin:0;font-family:'Segoe UI';background:#f1f5f9;}
-.header{display:flex;justify-content:space-between;padding:15px;background:white;}
-.logo{width:50px;}
+body{margin:0;font-family:Segoe UI;background:#f1f5f9;}
+.header{padding:15px;background:white;}
 .container{padding:20px;}
-.section-title{font-size:18px;margin:20px 0;}
-.card{background:white;padding:15px;border-radius:12px;margin-bottom:10px;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
-.box{background:white;padding:10px;border-radius:10px;text-align:center;}
+.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.box{background:white;padding:10px;border-radius:8px;text-align:center;}
 .today{border:2px solid green;}
 .done{opacity:0.5;}
-.tree-container{overflow:auto;}
-svg{width:100%;height:400px;}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -25,102 +21,81 @@ svg{width:100%;height:400px;}
 <body>
 
 <div class="header">
-<img src="logo.png" class="logo">
-<h3>ILLATH AL KATHIRI</h3>
+<img src="logo.png" width="40"> ILLATH AL KATHIRI
 </div>
 
 <div class="container">
-
-<div class="section-title">📢 Announcements</div>
-<div id="announcementSection"></div>
-
-<div class="section-title">🕌 Mowlid</div>
-<div id="mowlidSection"></div>
-
-<div class="section-title">🍽️ Tabarruk</div>
-<div id="tabarrukSection"></div>
-
-<div class="section-title">🎂 Birthdays</div>
-<div id="birthdaySection"></div>
-
-<div class="section-title">🌳 Family Tree</div>
-<div class="tree-container">
-<svg id="treeSVG"></svg>
-</div>
-
+<h3>Announcements</h3><div id="ann"></div>
+<h3>Mowlid</h3><div id="mow"></div>
+<h3>Tabarruk</h3><div id="tab"></div>
+<h3>Birthdays</h3><div id="bd"></div>
+<h3>Tree</h3><div id="tree"></div>
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
-  authDomain: "family-6889b.firebaseapp.com",
-  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
-  projectId: "family-6889b"
+const firebaseConfig={
+apiKey:"AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+authDomain:"family-6889b.firebaseapp.com",
+databaseURL:"https://family-6889b-default-rtdb.firebaseio.com",
+projectId:"family-6889b"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db=firebase.database();
 
-let mowlidData=null, tabData={}, bdayData={}, annData={}, people={};
+let m,t,b,a,p;
 
 /* LOAD */
-db.ref("mowlid").on("value", s=>{mowlidData=s.val();render();});
-db.ref("tabarruk").on("value", s=>{tabData=s.val()||{};render();});
-db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};render();});
-db.ref("announcements").on("value", s=>{annData=s.val()||{};render();});
-db.ref("people").on("value", s=>{people=s.val()||{};drawTree();});
+db.ref("mowlid").on("value",s=>{m=s.val();render();});
+db.ref("tabarruk").on("value",s=>{t=s.val();render();});
+db.ref("birthdays").on("value",s=>{b=s.val();render();});
+db.ref("announcements").on("value",s=>{a=s.val();render();});
+db.ref("people").on("value",s=>{p=s.val();renderTree();});
 
 /* RENDER */
 function render(){
 let now=new Date();
 
 /* ANN */
-let a="";
-for(let i in annData){
-let f=new Date(annData[i].from);
-let t=new Date(annData[i].to);
-if(now>=f&&now<=t){
-a+=`<div class="card">${annData[i].title}<br>${annData[i].text}</div>`;
+let ah="";
+for(let i in a){
+let f=new Date(a[i].from),to=new Date(a[i].to);
+if(now>=f&&now<=to){
+ah+=`<div class="card">${a[i].title}<br>${a[i].text}</div>`;
 }
 }
-announcementSection.innerHTML=a;
+ann.innerHTML=ah;
 
 /* MOWLID */
-if(mowlidData){
-mowlidSection.innerHTML=`<div class="card">${mowlidData.name}</div>`;
+if(m){
+mow.innerHTML=`<div class="card">${m.name}</div>`;
 }
 
 /* TAB */
-let grid="";
+let th='<div class="grid">';
 let i=0;
-for(let k in tabData){
-grid+=`<div class="box">${tabData[k].name||"-"}</div>`;
+for(let k in t){
+th+=`<div class="box">${t[k].name||"-"}</div>`;
 }
-tabarrukSection.innerHTML=`<div class="grid">${grid}</div>`;
+th+='</div>';
+tab.innerHTML=th;
 
-/* BDAY */
-let b="";
-for(let i in bdayData){
-b+=`<div class="card">${bdayData[i].name}</div>`;
+/* BD */
+let bh="";
+for(let i in b){
+let d=new Date(b[i].dob);
+let age=new Date().getFullYear()-d.getFullYear();
+bh+=`<div class="card">${b[i].name}<br>Turns ${age}</div>`;
 }
-birthdaySection.innerHTML=b;
+bd.innerHTML=bh;
 }
 
 /* TREE */
-function drawTree(){
-let svg=document.getElementById("treeSVG");
-svg.innerHTML="";
-
-let arr=Object.entries(people);
-
-arr.forEach((p,i)=>{
-let x=100+(i*120);
-let y=100;
-
-svg.innerHTML+=`
-<circle cx="${x}" cy="${y}" r="25" fill="white" stroke="black"/>
-<text x="${x}" y="${y+5}" text-anchor="middle">${p[1].name}</text>`;
-});
+function renderTree(){
+let h="";
+for(let i in p){
+h+=`<div class="card">${p[i].name}</div>`;
+}
+tree.innerHTML=h;
 }
 </script>
 
