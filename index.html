@@ -89,7 +89,13 @@ button{
   </div>
 
   <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
+ <div style="position:relative;">
+  <input type="password" id="password" placeholder="Password" style="padding-right:40px;">
+  <span onclick="togglePassword()" 
+        style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer;">
+    👁️
+  </span>
+</div>
 
   <div id="rememberBox" class="remember">
     <input type="checkbox" id="remember"> Remember Me
@@ -140,6 +146,19 @@ function login(){
     }else{
       document.getElementById("error").innerText="Invalid Admin Login";
     }
+  }
+}
+/* 👁️ TOGGLE PASSWORD (ADD THIS PART) */
+function togglePassword(){
+  let pass = document.getElementById("password");
+  let icon = document.getElementById("eyeIcon");
+
+  if(pass.type === "password"){
+    pass.type = "text";
+    icon.innerText = "🙈";
+  }else{
+    pass.type = "password";
+    icon.innerText = "👁️";
   }
 }
 
