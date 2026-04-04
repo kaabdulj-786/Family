@@ -1,29 +1,37 @@
-alert("script loaded");
 const firebaseConfig = {
 apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
 authDomain: "family-6889b.firebaseapp.com",
 databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
-projectId: "family-6889b",
+projectId: "family-6889b"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// MOWLID
-function saveMowlid(){
-const name = mName.value;
-const days = mDays.value;
-const start = mStart.value;
+// TEST
+console.log("JS Loaded");
 
-db.ref("mowlid").set({name, days, start});
+// MOWLID SAVE
+function saveMowlid(){
+const name = document.getElementById("mName").value;
+const days = document.getElementById("mDays").value;
+const start = document.getElementById("mStart").value;
+
+db.ref("mowlid").set({
+name: name,
+days: days,
+start: start
+});
+
 generateTabarruk(days, start);
 
-alert("Saved");
+alert("Mowlid Saved");
 }
 
-// TABARRUK
+// TABARRUK GENERATE
 function generateTabarruk(days, start){
-tabarrukList.innerHTML = "";
+const container = document.getElementById("tabarrukList");
+container.innerHTML = "";
 
 let s = new Date(start);
 
@@ -32,63 +40,76 @@ let d = new Date(s);
 d.setDate(d.getDate()+i);
 
 ```
-tabarrukList.innerHTML += `
-  <div>
-    Day ${i+1} - ${d.toDateString()}
-    <input id="t${i}" placeholder="Name">
-  </div>
-`;
+let div = document.createElement("div");
+div.innerHTML = "Day " + (i+1) + " - " + d.toDateString();
+
+let input = document.createElement("input");
+input.placeholder = "Name";
+
+div.appendChild(input);
+container.appendChild(div);
 ```
 
 }
 }
 
+// SAVE TABARRUK
 function saveTabarruk(){
+const inputs = document.querySelectorAll("#tabarrukList input");
 let data = {};
-let inputs = tabarrukList.querySelectorAll("input");
 
 inputs.forEach((inp,i)=>{
 data["day"+(i+1)] = inp.value;
 });
 
 db.ref("tabarruk").set(data);
-alert("Saved");
+
+alert("Tabarruk Saved");
 }
 
-// BIRTHDAY
+// ADD BIRTHDAY
 function addBirthday(){
 let id = Date.now();
+
 db.ref("birthdays/"+id).set({
-name: bName.value,
-date: bDate.value
+name: document.getElementById("bName").value,
+date: document.getElementById("bDate").value
 });
 }
 
 // SHOW BIRTHDAYS
 db.ref("birthdays").on("value", snap=>{
-birthdayList.innerHTML="";
+const list = document.getElementById("birthdayList");
+list.innerHTML = "";
+
 let data = snap.val();
 for(let i in data){
-birthdayList.innerHTML += `<p>${data[i].name}</p>`;
+let p = document.createElement("p");
+p.innerText = data[i].name;
+list.appendChild(p);
 }
 });
 
-// ANNOUNCEMENT
+// ADD ANNOUNCEMENT
 function addAnnouncement(){
 let id = Date.now();
+
 db.ref("announcements/"+id).set({
-text: aText.value,
-from: aFrom.value,
-to: aTo.value
+text: document.getElementById("aText").value,
+from: document.getElementById("aFrom").value,
+to: document.getElementById("aTo").value
 });
 }
 
-// SHOW ANNOUNCEMENT
+// SHOW ANNOUNCEMENTS
 db.ref("announcements").on("value", snap=>{
-announcementList.innerHTML="";
+const list = document.getElementById("announcementList");
+list.innerHTML = "";
+
 let data = snap.val();
 for(let i in data){
-announcementList.innerHTML += `<p>${data[i].text}</p>`;
+let p = document.createElement("p");
+p.innerText = data[i].text;
+list.appendChild(p);
 }
 });
-
