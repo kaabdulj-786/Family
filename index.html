@@ -1,185 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Family Login</title>
-
+<title>Login</title>
 <style>
-body{
-  margin:0;
-  font-family:Arial;
-  height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:linear-gradient(135deg,#0f766e,#1e3a8a);
-}
-
-.login-box{
-  width:320px;
-  padding:30px;
-  background:white;
-  border-radius:15px;
-  text-align:center;
-}
-
-.logo{
-  width:60px;
-  margin-bottom:10px;
-}
-
-.tabs{
-  display:flex;
-  margin-bottom:15px;
-}
-
-.tab{
-  flex:1;
-  padding:10px;
-  background:#ddd;
-  cursor:pointer;
-}
-
-.tab.active{
-  background:#0f766e;
-  color:white;
-}
-
-input{
-  width:100%;
-  padding:10px;
-  margin:8px 0;
-  border-radius:8px;
-  border:1px solid #ccc;
-  box-sizing:border-box;   /* 🔥 IMPORTANT FIX */
-}
-
-button{
-  width:100%;
-  padding:10px;
-  border:none;
-  border-radius:20px;
-  background:#0f766e;
-  color:white;
-  margin-top:10px;
-  cursor:pointer;
-}
-
-.remember{
-  font-size:13px;
-  margin-top:5px;
-}
-
-.error{
-  color:red;
-  font-size:13px;
-  margin-top:8px;
-}
-  #toggleText:hover{
-  text-decoration:underline;
-}
+body{margin:0;font-family:Segoe UI;background:#0f172a;display:flex;justify-content:center;align-items:center;height:100vh;}
+.box{background:white;padding:30px;border-radius:16px;width:320px;text-align:center;}
+input{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
+button{padding:10px;width:100%;background:#0f766e;color:white;border:none;border-radius:8px;}
+.link{cursor:pointer;color:#0f766e;font-size:13px;}
 </style>
-
 </head>
 
 <body>
 
-<div class="login-box">
+<div class="box">
+<img src="logo.png" width="80"><h3>Family Portal</h3>
 
-  <img src="logo.png" class="logo">
+<select id="type">
+<option value="family">Family</option>
+<option value="admin">Admin</option>
+</select>
 
-  <div class="tabs">
-    <div class="tab active" onclick="switchTab('family', this)">Family</div>
-    <div class="tab" onclick="switchTab('admin', this)">Admin</div>
-  </div>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
 
-  <input type="text" id="username" placeholder="Username">
-<div style="position:relative;">
-  <input type="password" id="password" placeholder="Password" style="padding-right:55px;">
-  
-  <span id="toggleText"
-        onclick="togglePassword()"
-        style="
-          position:absolute;
-          right:10px;
-          top:50%;
-          transform:translateY(-50%);
-          cursor:pointer;
-          font-size:13px;
-          color:#0f766e;
-          font-weight:500;
-        ">
-    Show
-  </span>
+<div id="rememberBox">
+<input type="checkbox" id="remember"> Remember Me
 </div>
 
-  <div id="rememberBox" class="remember">
-    <input type="checkbox" id="remember"> Remember Me
-  </div>
-
-  <button onclick="login()">Login</button>
-
-  <div id="error" class="error"></div>
-
+<button onclick="login()">Login</button>
 </div>
 
 <script>
-let mode="family";
-
-function switchTab(type, el){
-  mode=type;
-
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  el.classList.add("active");
-
-  document.getElementById("rememberBox").style.display =
-    (mode==="family")?"block":"none";
-
-  document.getElementById("error").innerText="";
+if(localStorage.getItem("familyLogged")){
+location.href="home.html";
 }
 
 function login(){
+let t=type.value,u=user.value,p=pass.value;
 
-  let user=document.getElementById("username").value;
-  let pass=document.getElementById("password").value;
-
-  if(mode==="family"){
-    if(user==="Kathiri House" && pass==="Kathiri@786"){
-
-      if(document.getElementById("remember").checked){
-        localStorage.setItem("familyLogin","true");
-      }
-
-      window.location.href="home.html";
-
-    }else{
-      document.getElementById("error").innerText="Invalid Family Login";
-    }
-
-  }else{
-    if(user==="KathiriAdmin" && pass==="Kathiriadmin@786#"){
-      window.location.href="admin.html";
-    }else{
-      document.getElementById("error").innerText="Invalid Admin Login";
-    }
-  }
+if(t==="admin" && u==="KathiriAdmin" && p==="Kathiriadmin@786#"){
+location.href="admin.html";
 }
-function togglePassword(){
-  let pass = document.getElementById("password");
-  let text = document.getElementById("toggleText");
-
-  if(pass.type === "password"){
-    pass.type = "text";
-    text.innerText = "Hide";
-  }else{
-    pass.type = "password";
-    text.innerText = "Show";
-  }
+else if(t==="family" && u==="Kathiri House" && p==="Kathiri@786"){
+if(remember.checked) localStorage.setItem("familyLogged",true);
+location.href="home.html";
 }
-/* AUTO LOGIN */
-window.onload=function(){
-  if(localStorage.getItem("familyLogin")==="true"){
-    window.location.href="home.html";
-  }
+else alert("Invalid");
+}
+
+type.onchange=()=>{
+rememberBox.style.display = type.value==="family" ? "block":"none";
 }
 </script>
 
