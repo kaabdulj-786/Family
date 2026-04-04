@@ -96,3 +96,9 @@ button {
   margin-left: auto;
   margin-right: auto;
 }
+/* SIDEBAR LOGO */
+.logo-sidebar {
+  width: 110px;
+  display: block;
+  margin: 0 auto 20px auto;
+}
