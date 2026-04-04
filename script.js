@@ -44,7 +44,15 @@ function saveMowlid(){
 
 function deleteMowlid(){
   db.ref("mowlid").remove();
-  showToast("Deleted");
+
+  // CLEAR UI
+  mName.value = "";
+  mDays.value = "";
+  mStart.value = "";
+  mowlidDisplay.innerHTML = "";
+  tabarrukList.innerHTML = "";
+
+  showToast("Mowlid Deleted");
 }
 
 db.ref("mowlid").on("value", snap=>{
