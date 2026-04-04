@@ -1,3 +1,4 @@
+alert("script loaded");
 const firebaseConfig = {
 apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
 authDomain: "family-6889b.firebaseapp.com",
