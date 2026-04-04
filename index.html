@@ -50,6 +50,7 @@ input{
   margin:8px 0;
   border-radius:8px;
   border:1px solid #ccc;
+  box-sizing:border-box;   /* 🔥 IMPORTANT FIX */
 }
 
 button{
@@ -73,6 +74,9 @@ button{
   font-size:13px;
   margin-top:8px;
 }
+  #toggleText:hover{
+  text-decoration:underline;
+}
 </style>
 
 </head>
@@ -90,7 +94,7 @@ button{
 
   <input type="text" id="username" placeholder="Username">
 <div style="position:relative;">
-  <input type="password" id="password" placeholder="Password" style="padding-right:60px;">
+  <input type="password" id="password" placeholder="Password" style="padding-right:55px;">
   
   <span id="toggleText"
         onclick="togglePassword()"
