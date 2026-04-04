@@ -4,168 +4,18 @@
 <title>Illath Al Kathiri</title>
 
 <style>
-body{
-  margin:0;
-  font-family:'Segoe UI';
-  background:#f1f5f9;
-}
-
-/* HEADER */
-.header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:15px 25px;
-  background:white;
-  box-shadow:0 2px 10px rgba(0,0,0,0.05);
-}
-
-.leftHeader{
-  display:flex;
-  align-items:center;
-}
-
-.logo{width:50px;margin-right:10px;}
-
-.title{font-weight:bold;font-size:18px;color:#1f2937;}
-
-.container{
-  padding:25px;
-  max-width:1100px;
-  margin:auto;
-}
-
-.section-title{
-  font-size:20px;
-  font-weight:600;
-  margin:30px 0 15px;
-}
-
-/* CARD */
-.card{
-  background:white;
-  padding:18px;
-  border-radius:18px;
-  box-shadow:0 8px 25px rgba(0,0,0,0.06);
-  margin-bottom:15px;
-}
-
-/* GRID */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-  gap:15px;
-}
-
-.box{
-  background:white;
-  padding:15px;
-  border-radius:14px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.05);
-  text-align:center;
-}
-
-.today{
-  border:2px solid #16a34a;
-  background:#ecfdf5;
-}
-
-.completed{
-  opacity:0.5;
-  text-decoration:line-through;
-}
-
-.small{font-size:12px;color:gray;}
-
-/* 🌳 TREE */
-.tree-tabs{
-  margin-bottom:15px;
-}
-
-.tree-tab{
-  padding:8px 15px;
-  border-radius:20px;
-  background:#e2e8f0;
-  margin-right:10px;
-  cursor:pointer;
-}
-
-.tree-tab.active{
-  background:#0f766e;
-  color:white;
-}
-
-.tree-level{
-  display:flex;
-  justify-content:center;
-  gap:40px;
-  margin:40px 0;
-  position:relative;
-}
-
-/* LINES */
-.tree-level::before{
-  content:"";
-  position:absolute;
-  top:-20px;
-  left:0;
-  right:0;
-  height:2px;
-  background:#cbd5e1;
-}
-
-/* PERSON */
-.person{
-  background:white;
-  padding:12px 18px;
-  border-radius:14px;
-  box-shadow:0 4px 15px rgba(0,0,0,0.05);
-  text-align:center;
-  position:relative;
-}
-
-/* vertical line */
-.person::before{
-  content:"";
-  position:absolute;
-  top:-20px;
-  left:50%;
-  width:2px;
-  height:20px;
-  background:#cbd5e1;
-}
-
-.person b{
-  display:block;
-}
-
-.person small{
-  font-size:11px;
-  color:gray;
-}
-
-/* LINKED */
-.linked{
-  border:2px solid #16a34a;
-  background:#f0fdf4;
-}
-
-/* POPUP */
-.popup{
-  display:none;
-  position:fixed;
-  top:0;left:0;
-  width:100%;height:100%;
-  background:rgba(0,0,0,0.4);
-  justify-content:center;
-  align-items:center;
-}
-
-.popup-box{
-  background:white;
-  padding:25px;
-  border-radius:16px;
-}
+body{margin:0;font-family:'Segoe UI';background:#f1f5f9;}
+.header{display:flex;justify-content:space-between;padding:15px;background:white;}
+.logo{width:50px;}
+.container{padding:20px;}
+.section-title{font-size:18px;margin:20px 0;}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:10px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+.box{background:white;padding:10px;border-radius:10px;text-align:center;}
+.today{border:2px solid green;}
+.done{opacity:0.5;}
+.tree-container{overflow:auto;}
+svg{width:100%;height:400px;}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -175,11 +25,8 @@ body{
 <body>
 
 <div class="header">
-  <div class="leftHeader">
-    <img src="logo.png" class="logo">
-    <div class="title">ILLATH AL KATHIRI</div>
-  </div>
-  <button onclick="openBirthday()">🎂</button>
+<img src="logo.png" class="logo">
+<h3>ILLATH AL KATHIRI</h3>
 </div>
 
 <div class="container">
@@ -193,173 +40,87 @@ body{
 <div class="section-title">🍽️ Tabarruk</div>
 <div id="tabarrukSection"></div>
 
-<div class="section-title">🎂 Today’s Birthdays</div>
+<div class="section-title">🎂 Birthdays</div>
 <div id="birthdaySection"></div>
 
 <div class="section-title">🌳 Family Tree</div>
-<div id="treeTabs" class="tree-tabs"></div>
-<div id="treeView"></div>
-
+<div class="tree-container">
+<svg id="treeSVG"></svg>
 </div>
 
-<div id="birthdayPopup" class="popup">
-  <div class="popup-box">
-    <h3>Family Birthdays</h3>
-    <div id="birthdayList"></div>
-    <button onclick="closeBirthday()">Close</button>
-  </div>
 </div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "...",
-  databaseURL: "...",
-  projectId: "..."
+  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+  authDomain: "family-6889b.firebaseapp.com",
+  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
+  projectId: "family-6889b"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let mowlidData=null, tabData={}, bdayData={}, annData={}, treeData={}, peopleData={};
-let currentTree=null, todayIndex=-1;
+let mowlidData=null, tabData={}, bdayData={}, annData={}, people={};
 
-/* LISTENERS */
-db.ref("announcements").on("value", s=>{annData=s.val()||{};renderAll();});
-db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};renderAll();});
-db.ref("trees").on("value", s=>{treeData=s.val()||{};renderTabs();});
-db.ref("people").on("value", s=>{peopleData=s.val()||{};renderTree();});
+/* LOAD */
+db.ref("mowlid").on("value", s=>{mowlidData=s.val();render();});
+db.ref("tabarruk").on("value", s=>{tabData=s.val()||{};render();});
+db.ref("birthdays").on("value", s=>{bdayData=s.val()||{};render();});
+db.ref("announcements").on("value", s=>{annData=s.val()||{};render();});
+db.ref("people").on("value", s=>{people=s.val()||{};drawTree();});
 
-/* BIRTHDAY POPUP */
-function openBirthday(){
-  birthdayPopup.style.display="flex";
-  let html="";
-  for(let i in bdayData){
-    html+=`<div>${bdayData[i].name}</div>`;
-  }
-  birthdayList.innerHTML=html;
+/* RENDER */
+function render(){
+let now=new Date();
+
+/* ANN */
+let a="";
+for(let i in annData){
+let f=new Date(annData[i].from);
+let t=new Date(annData[i].to);
+if(now>=f&&now<=t){
+a+=`<div class="card">${annData[i].title}<br>${annData[i].text}</div>`;
 }
-function closeBirthday(){birthdayPopup.style.display="none";}
+}
+announcementSection.innerHTML=a;
 
-/* RENDER MAIN */
-function renderAll(){
-  let now=new Date();
-  let aHTML="", bHTML="";
+/* MOWLID */
+if(mowlidData){
+mowlidSection.innerHTML=`<div class="card">${mowlidData.name}</div>`;
+}
 
-  for(let i in annData){
-    let f=new Date(annData[i].from);
-    let t=new Date(annData[i].to);
+/* TAB */
+let grid="";
+let i=0;
+for(let k in tabData){
+grid+=`<div class="box">${tabData[k].name||"-"}</div>`;
+}
+tabarrukSection.innerHTML=`<div class="grid">${grid}</div>`;
 
-    if(now>=f && now<=t){
-      aHTML+=`<div class="card">
-      <b>${annData[i].title}</b><br>
-      ${annData[i].text}<br>
-      <span class="small">${f.toDateString()} - ${t.toDateString()}</span>
-      </div>`;
-    }
-  }
-
-  let today=new Date(),found=false;
-
-  for(let i in bdayData){
-    let d=new Date(bdayData[i].dob);
-
-    if(d.getDate()==today.getDate() && d.getMonth()==today.getMonth()){
-      found=true;
-      let age=today.getFullYear()-d.getFullYear();
-
-      bHTML+=`<div class="card">
-      <b>${bdayData[i].name}</b><br>
-      <span class="small">Turns ${age} 🎂</span><br>
-      <span class="small">🎉 Happy Birthday! May Allah bless you</span>
-      </div>`;
-    }
-  }
-
-  if(!found) bHTML=`<div class="card">No birthdays today</div>`;
-
-  announcementSection.innerHTML=aHTML;
-  birthdaySection.innerHTML=bHTML;
+/* BDAY */
+let b="";
+for(let i in bdayData){
+b+=`<div class="card">${bdayData[i].name}</div>`;
+}
+birthdaySection.innerHTML=b;
 }
 
 /* TREE */
-function renderTabs(){
-  let html="";
-  for(let id in treeData){
-    html+=`<span class="tree-tab ${id===currentTree?'active':''}" onclick="selectTree('${id}')">${treeData[id].name}</span>`;
-  }
-  treeTabs.innerHTML=html;
+function drawTree(){
+let svg=document.getElementById("treeSVG");
+svg.innerHTML="";
 
-  if(!currentTree){
-    currentTree=Object.keys(treeData)[0];
-    renderTree();
-  }
-}
+let arr=Object.entries(people);
 
-function selectTree(id){
-  currentTree=id;
-  renderTabs();
-  renderTree();
-}
+arr.forEach((p,i)=>{
+let x=100+(i*120);
+let y=100;
 
-function renderTree(){
-  if(!currentTree) return;
-
-  let people=[];
-  for(let id in peopleData){
-    if(peopleData[id].tree===currentTree){
-      people.push({...peopleData[id],id});
-    }
-  }
-
-  let levels=[];
-  let root=people.filter(p=>!p.father);
-  levels.push(root);
-
-  let current=root;
-
-  while(current.length){
-    let next=[];
-    current.forEach(p=>{
-      people.forEach(c=>{
-        if(c.father===p.id) next.push(c);
-      });
-    });
-    if(next.length) levels.push(next);
-    current=next;
-  }
-
-  function linked(name){
-    let c=0;
-    for(let i in peopleData){
-      if(peopleData[i].name===name) c++;
-    }
-    return c>1;
-  }
-
-  let html="";
-
-  levels.forEach(level=>{
-    html+=`<div class="tree-level">`;
-
-    level.forEach(p=>{
-      let father=p.father&&peopleData[p.father]?peopleData[p.father].name:"";
-      let spouse=p.spouse&&peopleData[p.spouse]?peopleData[p.spouse].name:"";
-
-      html+=`
-      <div class="person ${linked(p.name)?'linked':''}">
-        <b>${p.name}</b>
-        <small>
-          ${father?"S/o "+father:""}
-          ${spouse?"<br>Spouse: "+spouse:""}
-        </small>
-      </div>`;
-    });
-
-    html+=`</div>`;
-  });
-
-  treeView.innerHTML=html;
+svg.innerHTML+=`
+<circle cx="${x}" cy="${y}" r="25" fill="white" stroke="black"/>
+<text x="${x}" y="${y+5}" text-anchor="middle">${p[1].name}</text>`;
+});
 }
 </script>
 
