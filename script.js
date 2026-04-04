@@ -1,41 +1,116 @@
+// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
-  apiKey: "AIzaSy...",
-  authDomain: "...",
-  databaseURL: "...",
-  projectId: "..."
+  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+  authDomain: "family-6889b.firebaseapp.com",
+  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
+  projectId: "family-6889b"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let trees={}, people={};
-
+/* =======================
+   SECTION SWITCH
+======================= */
 function showSection(id){
   document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-showSection("tree");
+showSection("mowlid");
 
-/* TREE LOAD */
+/* =======================
+   🕌 MOWLID
+======================= */
+function saveMowlid(){
+  db.ref("mowlid").set({
+    name: mName.value,
+    days: parseInt(mDays.value),
+    start: mStart.value
+  });
+
+  generateTabarruk(mDays.value, mStart.value);
+  showToast("Mowlid Saved");
+}
+
+function deleteMowlid(){
+  db.ref("mowlid").remove();
+  db.ref("tabarruk").remove();
+
+  mName.value="";
+  mDays.value="";
+  mStart.value="";
+  tabarrukList.innerHTML="";
+
+  showToast("Deleted");
+}
+
+db.ref("mowlid").on("value", snap=>{
+  let d = snap.val();
+  if(!d) return;
+
+  mName.value = d.name;
+  mDays.value = d.days;
+  mStart.value = d.start;
+
+  generateTabarruk(d.days, d.start);
+});
+
+/* =======================
+   🍽 TABARRUK
+======================= */
+function generateTabarruk(days,start){
+  tabarrukList.innerHTML="";
+  let s = new Date(start);
+
+  for(let i=0;i<days;i++){
+    let d = new Date(s);
+    d.setDate(d.getDate()+i);
+
+    tabarrukList.innerHTML+=`
+    <div class="card">
+      Day ${i+1} - ${d.toDateString()}<br>
+      <input placeholder="Name">
+      <input placeholder="Remarks">
+    </div>`;
+  }
+}
+
+function saveTabarruk(){
+  let data = {};
+  let cards = tabarrukList.children;
+
+  for(let i=0;i<cards.length;i++){
+    let inputs = cards[i].querySelectorAll("input");
+
+    data["day"+(i+1)] = {
+      name: inputs[0].value,
+      remarks: inputs[1].value
+    };
+  }
+
+  db.ref("tabarruk").set(data);
+  showToast("Saved");
+}
+
+/* =======================
+   🌳 TREE SYSTEM
+======================= */
+let trees = {}, people = {};
+
 db.ref("trees").on("value", s=>{
-  trees=s.val()||{};
+  trees = s.val() || {};
   loadTrees();
 });
 
 db.ref("people").on("value", s=>{
-  people=s.val()||{};
+  people = s.val() || {};
   loadPeople();
-  renderPreview();
 });
 
 /* CREATE TREE */
 function createTree(){
-  let name=treeName.value;
-  if(!name) return alert("Enter name");
-
-  let id=Date.now();
-  db.ref("trees/"+id).set({name});
-
+  let id = Date.now();
+  db.ref("trees/"+id).set({name: treeName.value});
   treeName.value="";
 }
 
@@ -52,14 +127,13 @@ function loadTrees(){
 
 /* ADD PERSON */
 function addPerson(){
-  let id=Date.now();
+  let id = Date.now();
 
   db.ref("people/"+id).set({
-    name:pName.value,
-    tree:pTree.value,
-    father:pFather.value,
-    spouse:pSpouse.value,
-    gender:pGender.value
+    name: pName.value,
+    tree: pTree.value,
+    father: pFather.value,
+    spouse: pSpouse.value
   });
 
   pName.value="";
@@ -75,7 +149,7 @@ function loadPeople(){
     peopleList.innerHTML+=`
     <div class="card">
       ${people[id].name}
-      <button onclick="deletePerson('${id}')">X</button>
+      <button onclick="deletePerson('${id}')">Delete</button>
     </div>`;
 
     pFather.innerHTML+=`<option value="${id}">${people[id].name}</option>`;
@@ -83,19 +157,16 @@ function loadPeople(){
   }
 }
 
-/* DELETE */
 function deletePerson(id){
   db.ref("people/"+id).remove();
 }
 
-/* PREVIEW TREE */
-function renderPreview(){
-  let html="";
-  let arr=Object.entries(people);
-
-  arr.forEach(([id,p])=>{
-    html+=`<div class="person">${p.name}</div>`;
-  });
-
-  treePreview.innerHTML=html;
+/* =======================
+   🔔 TOAST
+======================= */
+function showToast(msg){
+  let t = document.getElementById("toast");
+  t.innerText = msg;
+  t.style.display = "block";
+  setTimeout(()=>t.style.display="none",2000);
 }
