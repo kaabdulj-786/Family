@@ -1,1 +1,78 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase -->
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+</head>
+
+<body>
+
+<div class="navbar">
+  <img src="logo.png" class="logo-small">
+  <h2>Admin Panel</h2>
+</div>
+
+<div class="container">
+
+  <!-- MOWLID -->
+
+  <div class="card">
+    <h3>Mowlid Setup</h3>
+    <input id="mName" placeholder="Mowlid Name">
+    <input id="mDays" type="number" placeholder="No. of Days">
+    <input id="mStart" type="date">
+    <button onclick="saveMowlid()">Save</button>
+  </div>
+
+  <!-- TABARRUK -->
+
+  <div class="card">
+    <h3>Tabarruk</h3>
+    <div id="tabarrukList"></div>
+    <button onclick="saveTabarruk()">Save Tabarruk</button>
+  </div>
+
+  <!-- BIRTHDAY -->
+
+  <div class="card">
+    <h3>Birthdays</h3>
+    <input id="bName" placeholder="Name">
+    <input id="bDate" type="date">
+    <button onclick="addBirthday()">Add</button>
+
+```
+<div id="birthdayList"></div>
+```
+
+  </div>
+
+  <!-- ANNOUNCEMENT -->
+
+  <div class="card">
+    <h3>Announcements</h3>
+    <input id="aText" placeholder="Announcement">
+    <input id="aFrom" type="date">
+    <input id="aTo" type="date">
+    <button onclick="addAnnouncement()">Add</button>
+
+```
+<div id="announcementList"></div>
+```
+
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
 
