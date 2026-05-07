@@ -1,9 +1,233 @@
-body{margin:0;display:flex;font-family:Segoe UI;background:#f1f5f9;}
-.sidebar{width:220px;background:#0f172a;color:white;padding:20px;}
-.sidebar button{width:100%;margin:5px 0;padding:10px;border:none;background:white;border-radius:6px;}
-.main{flex:1;padding:20px;}
-.section{display:none;}
-.section.active{display:block;}
-input,select{display:block;margin:10px 0;padding:10px;width:250px;border-radius:6px;}
-.card{background:white;padding:10px;margin:10px 0;border-radius:10px;}
-#toast{position:fixed;bottom:20px;right:20px;background:green;color:white;padding:10px;border-radius:8px;display:none;}
+/* ===== GLOBAL ===== */
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:#f1f5f9;
+  color:#1e293b;
+}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  position:fixed;
+  left:0;
+  top:0;
+  width:240px;
+  height:100vh;
+  background:linear-gradient(180deg,#0f172a,#111827);
+  color:white;
+  padding:25px 20px;
+  overflow:auto;
+}
+
+.logo-sidebar{
+  width:90px;
+  display:block;
+  margin:0 auto 15px;
+}
+
+.sidebar h2{
+  text-align:center;
+  margin-bottom:30px;
+  font-size:22px;
+}
+
+.sidebar button{
+  width:100%;
+  padding:14px;
+  margin-bottom:12px;
+  border:none;
+  border-radius:14px;
+  background:rgba(255,255,255,0.08);
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+  transition:0.25s;
+}
+
+.sidebar button:hover{
+  background:#0f766e;
+  transform:translateY(-2px);
+}
+
+/* ===== MAIN ===== */
+.main{
+  margin-left:240px;
+  padding:30px;
+}
+
+.section{
+  display:none;
+}
+
+.section.active{
+  display:block;
+}
+
+/* ===== CARD ===== */
+.card{
+  background:white;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.05);
+  margin-bottom:18px;
+}
+
+/* ===== INPUTS ===== */
+input,
+select,
+textarea{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  margin-bottom:15px;
+  border-radius:14px;
+  border:1px solid #d1d5db;
+  font-size:14px;
+  outline:none;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  border-color:#0f766e;
+}
+
+/* ===== BUTTON ===== */
+.primary-btn{
+  background:#0f766e;
+  color:white;
+  border:none;
+  padding:14px 20px;
+  border-radius:14px;
+  cursor:pointer;
+  transition:0.25s;
+  font-size:14px;
+}
+
+.primary-btn:hover{
+  background:#115e59;
+  transform:translateY(-2px);
+}
+
+/* ===== GRID ===== */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:18px;
+}
+
+/* ===== TABARRUK ===== */
+.tab-box{
+  background:white;
+  border-radius:18px;
+  padding:18px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.05);
+  transition:0.25s;
+}
+
+.today-box{
+  border:2px solid #10b981;
+  background:#ecfdf5;
+  transform:scale(1.02);
+}
+
+.completed-box{
+  opacity:0.5;
+  text-decoration:line-through;
+}
+
+/* ===== BADGE ===== */
+.badge{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:30px;
+  font-size:12px;
+  font-weight:600;
+}
+
+.badge-upcoming{
+  background:#fef3c7;
+  color:#92400e;
+}
+
+.badge-started{
+  background:#dbeafe;
+  color:#1d4ed8;
+}
+
+.badge-completed{
+  background:#dcfce7;
+  color:#166534;
+}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#16a34a;
+  color:white;
+  padding:14px 20px;
+  border-radius:12px;
+  display:none;
+  z-index:999;
+}
+
+/* ===== PUBLIC ===== */
+.public-header{
+  background:white;
+  padding:16px 25px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  box-shadow:0 3px 15px rgba(0,0,0,0.05);
+}
+
+.logo{
+  width:55px;
+}
+
+.title{
+  font-size:20px;
+  font-weight:700;
+}
+
+.container{
+  padding:25px;
+}
+
+.section-title{
+  margin:30px 0 14px;
+  font-size:20px;
+  font-weight:700;
+}
+
+/* ===== POPUP ===== */
+.popup{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.45);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+}
+
+.popup-box{
+  width:90%;
+  max-width:450px;
+  background:white;
+  border-radius:20px;
+  padding:25px;
+}
+
+/* ===== EMPTY ===== */
+.empty{
+  padding:20px;
+  text-align:center;
+  color:gray;
+}
