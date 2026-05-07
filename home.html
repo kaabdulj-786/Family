@@ -92,7 +92,7 @@ let mowlidData = null;
 let tabData = {};
 let birthdayData = {};
 let announcementData = {};
-
+let statusData = {};
 let todayIndex = -1;
 
 /* ===========================
@@ -118,7 +118,10 @@ db.ref("announcements").on("value",s=>{
   announcementData = s.val() || {};
   renderAll();
 });
-
+db.ref("mowlidStatus").on("value",s=>{
+  statusData = s.val() || {};
+  renderAll();
+});
 /* ===========================
    MAIN RENDER
 =========================== */
@@ -198,25 +201,55 @@ function renderAll(){
 
     let status = "Upcoming";
 
-    let badge = "badge-upcoming";
+let badge = "badge-upcoming";
 
-    if(diff >= 0 && diff < mowlidData.days){
+if(diff >= 0 && diff < mowlidData.days){
 
-      todayIndex = diff;
+  todayIndex = diff;
 
-      status = "Started";
+  let key = "day"+(todayIndex+1);
+
+  let s = statusData[key];
+
+  if(s){
+
+    if(s.status === "ongoing"){
+
+      status = "Ongoing";
 
       badge = "badge-started";
     }
 
-    if(diff >= mowlidData.days){
+    else if(s.status === "completed"){
 
       status = "Completed";
 
       badge = "badge-completed";
-
-      todayIndex = mowlidData.days - 1;
     }
+
+    else{
+
+      status = "Not Started";
+
+      badge = "badge-upcoming";
+    }
+
+  }else{
+
+    status = "Not Started";
+
+    badge = "badge-upcoming";
+  }
+}
+
+if(diff >= mowlidData.days){
+
+  status = "Completed";
+
+  badge = "badge-completed";
+
+  todayIndex = mowlidData.days - 1;
+}
 
     mowlidSection.innerHTML = `
 
