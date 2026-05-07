@@ -21,7 +21,9 @@
   <button onclick="showSection('tabarruk')">🍽️ Tabarruk</button>
   <button onclick="showSection('birthdays')">🎂 Birthdays</button>
   <button onclick="showSection('announcements')">📢 Announcements</button>
-
+<button onclick="showSection('tree')">
+  🌳 Family Tree
+</button>
 </div>
 
 <div class="main">
@@ -137,7 +139,74 @@
     <div id="announcementList"></div>
 
   </div>
+<!-- FAMILY TREE -->
+<div id="tree" class="section">
 
+  <!-- CREATE TREE -->
+  <div class="card">
+
+    <h2>🌳 Family Trees</h2>
+
+    <input
+      id="treeName"
+      placeholder="Create New Tree"
+    >
+
+    <button
+      class="primary-btn"
+      onclick="createTree()"
+    >
+      Create Tree
+    </button>
+
+    <br><br>
+
+    <select id="treeSelect"></select>
+
+  </div>
+
+  <!-- ADD PERSON -->
+  <div class="card">
+
+    <h2>👤 Add Person</h2>
+
+    <input
+      id="pName"
+      placeholder="Person Name"
+    >
+
+    <select id="pGender">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+
+    <select id="pFather">
+      <option value="">No Father</option>
+    </select>
+
+    <select id="pSpouse">
+      <option value="">No Spouse</option>
+    </select>
+
+    <button
+      class="primary-btn"
+      onclick="addPerson()"
+    >
+      Save Person
+    </button>
+
+  </div>
+
+  <!-- LIVE PEOPLE -->
+  <div class="card">
+
+    <h2>📋 Tree Members</h2>
+
+    <div id="peopleList"></div>
+
+  </div>
+
+</div>
 </div>
 
 <div id="toast" class="toast"></div>
