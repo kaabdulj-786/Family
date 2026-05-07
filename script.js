@@ -350,3 +350,214 @@ function updateStatus(status){
     showToast("Status Updated");
   });
 }
+/* ===========================
+   🌳 PREMIUM TREE ENGINE
+=========================== */
+
+let currentTree = null;
+
+/* CREATE TREE */
+
+function createTree(){
+
+  let name = treeName.value.trim();
+
+  if(!name){
+
+    showToast("Enter Tree Name");
+
+    return;
+  }
+
+  let id = "tree_" + Date.now();
+
+  db.ref("trees/"+id).set({
+    name:name
+  });
+
+  treeName.value = "";
+
+  showToast("Tree Created");
+}
+
+/* LOAD TREES */
+
+db.ref("trees").on("value",snap=>{
+
+  treeSelect.innerHTML = "";
+
+  let data = snap.val() || {};
+
+  for(let id in data){
+
+    treeSelect.innerHTML += `
+      <option value="${id}">
+        ${data[id].name}
+      </option>
+    `;
+  }
+
+  if(Object.keys(data).length){
+
+    currentTree = Object.keys(data)[0];
+
+    treeSelect.value = currentTree;
+
+    loadPeople();
+  }
+});
+
+/* TREE SWITCH */
+
+treeSelect.onchange = ()=>{
+
+  currentTree = treeSelect.value;
+
+  loadPeople();
+};
+
+/* ADD PERSON */
+
+function addPerson(){
+
+  if(!currentTree){
+
+    showToast("Create Tree First");
+
+    return;
+  }
+
+  let name = pName.value.trim();
+
+  if(!name){
+
+    showToast("Enter Name");
+
+    return;
+  }
+
+  let id = "person_" + Date.now();
+
+  let person = {
+    name:name,
+    gender:pGender.value,
+    father:pFather.value || null,
+    spouse:pSpouse.value || null,
+    trees:{}
+  };
+
+  person.trees[currentTree] = true;
+
+  db.ref("people/"+id).set(person);
+
+  /* RESET */
+
+  pName.value = "";
+  pFather.value = "";
+  pSpouse.value = "";
+  pGender.value = "male";
+
+  showToast("Person Added");
+}
+
+/* LOAD PEOPLE */
+
+function loadPeople(){
+
+  db.ref("people").on("value",snap=>{
+
+    let data = snap.val() || {};
+
+    peopleList.innerHTML = "";
+
+    pFather.innerHTML = `
+      <option value="">No Father</option>
+    `;
+
+    pSpouse.innerHTML = `
+      <option value="">No Spouse</option>
+    `;
+
+    for(let id in data){
+
+      let p = data[id];
+
+      /* SHOW ONLY PEOPLE IN THIS TREE */
+
+      if(
+        !p.trees
+        ||
+        !p.trees[currentTree]
+      ) continue;
+
+      /* PERSON CARD */
+
+      peopleList.innerHTML += `
+
+        <div class="card">
+
+          <h3>${p.name}</h3>
+
+          <small>
+            ${p.gender}
+          </small>
+
+          <br><br>
+
+          ${
+            p.father
+            ?
+            "Father Linked"
+            :
+            "No Father"
+          }
+
+          <br>
+
+          ${
+            p.spouse
+            ?
+            "Spouse Linked"
+            :
+            "No Spouse"
+          }
+
+          <br><br>
+
+          <button
+            class="primary-btn"
+            onclick="deletePerson('${id}')"
+          >
+            Delete
+          </button>
+
+        </div>
+      `;
+
+      /* FATHER OPTION */
+
+      pFather.innerHTML += `
+        <option value="${id}">
+          ${p.name}
+        </option>
+      `;
+
+      /* SPOUSE OPTION */
+
+      pSpouse.innerHTML += `
+        <option value="${id}">
+          ${p.name}
+        </option>
+      `;
+    }
+  });
+}
+
+/* DELETE PERSON */
+
+function deletePerson(id){
+
+  db.ref("people/"+id).remove();
+
+  showToast("Person Deleted");
+}
