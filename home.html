@@ -389,25 +389,59 @@ if(diff >= mowlidData.days){
         -
         dob.getFullYear();
 
-      birthdayHTML += `
+     birthdayHTML += `
 
-        <div class="card">
+<div class="card" style="
+  background:linear-gradient(
+    135deg,
+    #f59e0b,
+    #f97316
+  );
+  color:white;
+">
 
-          <h3>${b.name}</h3>
+  <div style="
+    display:flex;
+    align-items:center;
+    gap:18px;
+  ">
 
-          <div>
-            Turns ${age} 🎂
-          </div>
+    <div style="
+      font-size:42px;
+    ">
+      🎂
+    </div>
 
-          <br>
+    <div>
 
-          <small>
-            🎉 Happy Birthday!
-            May Allah bless you
-          </small>
+      <h2 style="
+        margin:0;
+        font-size:28px;
+      ">
+        ${b.name}
+      </h2>
 
-        </div>
-      `;
+      <div style="
+        margin-top:6px;
+        font-size:16px;
+      ">
+        Turns ${age}
+      </div>
+
+      <div style="
+        margin-top:10px;
+        opacity:0.92;
+      ">
+        ✨ Happy Birthday!
+        May Allah bless you
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+`;
     }
   }
 
