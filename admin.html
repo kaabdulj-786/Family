@@ -1,68 +1,128 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <title>Family Admin</title>
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 
 <body>
 
 <div class="sidebar">
-<h2>Admin</h2>
-<button onclick="showSection('mowlid')">Mowlid</button>
-<button onclick="showSection('tabarruk')">Tabarruk</button>
-<button onclick="showSection('birthdays')">Birthdays</button>
-<button onclick="showSection('ann')">Announcements</button>
-<button onclick="showSection('tree')">Tree</button>
+
+  <img src="logo.png" class="logo-sidebar">
+
+  <h2>Family Admin</h2>
+
+  <button onclick="showSection('mowlid')">🕌 Mowlid</button>
+  <button onclick="showSection('tabarruk')">🍽️ Tabarruk</button>
+  <button onclick="showSection('birthdays')">🎂 Birthdays</button>
+  <button onclick="showSection('announcements')">📢 Announcements</button>
+
 </div>
 
 <div class="main">
 
-<div id="mowlid" class="section">
-<h3>Mowlid</h3>
-<input id="mName"><input id="mDays"><input id="mStart" type="date">
-<button onclick="saveMowlid()">Save</button>
+  <!-- MOWLID -->
+  <div id="mowlid" class="section">
+
+    <div class="card">
+      <h2>🕌 Mowlid</h2>
+
+      <input id="mName" placeholder="Mowlid Name">
+
+      <input id="mDays" type="number" placeholder="Number of Days">
+
+      <input id="mStart" type="date">
+
+      <button class="primary-btn" onclick="saveMowlid()">
+        Save Mowlid
+      </button>
+
+      <br><br>
+
+      <button class="primary-btn" onclick="deleteMowlid()">
+        Delete Mowlid
+      </button>
+
+    </div>
+
+    <div id="mowlidPreview"></div>
+
+  </div>
+
+  <!-- TABARRUK -->
+  <div id="tabarruk" class="section">
+
+    <div class="card">
+      <h2>🍽️ Tabarruk</h2>
+
+      <div id="tabarrukList"></div>
+
+      <br>
+
+      <button class="primary-btn" onclick="saveTabarruk()">
+        Save Tabarruk
+      </button>
+
+    </div>
+
+  </div>
+
+  <!-- BIRTHDAY -->
+  <div id="birthdays" class="section">
+
+    <div class="card">
+
+      <h2>🎂 Birthdays</h2>
+
+      <input id="bName" placeholder="Name">
+
+      <input id="bDate" type="date">
+
+      <button class="primary-btn" onclick="addBirthday()">
+        Save Birthday
+      </button>
+
+    </div>
+
+    <div id="birthdayList"></div>
+
+  </div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div id="announcements" class="section">
+
+    <div class="card">
+
+      <h2>📢 Announcements</h2>
+
+      <input id="aTitle" placeholder="Title">
+
+      <textarea id="aText" placeholder="Description"></textarea>
+
+      <input id="aFrom" type="datetime-local">
+
+      <input id="aTo" type="datetime-local">
+
+      <button class="primary-btn" onclick="addAnnouncement()">
+        Save Announcement
+      </button>
+
+    </div>
+
+    <div id="announcementList"></div>
+
+  </div>
+
 </div>
 
-<div id="tabarruk" class="section">
-<h3>Tabarruk</h3>
-<div id="tabarrukList"></div>
-<button onclick="saveTabarruk()">Save</button>
-</div>
-
-<div id="birthdays" class="section">
-<input id="bName"><input id="bDate" type="date">
-<button onclick="addBirthday()">Add</button>
-<div id="bList"></div>
-</div>
-
-<div id="ann" class="section">
-<input id="aTitle"><input id="aText">
-<input id="aFrom" type="datetime-local">
-<input id="aTo" type="datetime-local">
-<button onclick="addAnn()">Add</button>
-<div id="aList"></div>
-</div>
-
-<div id="tree" class="section">
-<input id="treeName"><button onclick="createTree()">Create</button>
-<select id="treeSelect"></select>
-
-<input id="pName">
-<select id="pTree"></select>
-<select id="pFather"></select>
-<select id="pSpouse"></select>
-<button onclick="addPerson()">Add</button>
-
-<div id="peopleList"></div>
-</div>
-
-</div>
-
-<div id="toast"></div>
+<div id="toast" class="toast"></div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
