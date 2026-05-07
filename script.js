@@ -315,3 +315,38 @@ function deleteAnnouncement(id){
 
   showToast("Announcement Deleted");
 }
+/* ===========================
+   🕌 MOWLID STATUS
+=========================== */
+
+function updateStatus(status){
+
+  db.ref("mowlid").once("value",snap=>{
+
+    let m = snap.val();
+
+    if(!m) return;
+
+    let start = new Date(m.start);
+
+    let now = new Date();
+
+    let diff = Math.floor(
+      (now - start) /
+      (1000*60*60*24)
+    );
+
+    if(diff < 0 || diff >= m.days){
+
+      showToast("No Active Day");
+
+      return;
+    }
+
+    db.ref("mowlidStatus/day"+(diff+1)).set({
+      status:status
+    });
+
+    showToast("Status Updated");
+  });
+}
