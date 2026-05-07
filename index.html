@@ -1,57 +1,323 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Login</title>
+
+<title>Family Login</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{margin:0;font-family:Segoe UI;background:#0f172a;display:flex;justify-content:center;align-items:center;height:100vh;}
-.box{background:white;padding:30px;border-radius:16px;width:320px;text-align:center;}
-input{width:100%;padding:10px;margin:10px 0;border-radius:8px;border:1px solid #ccc;}
-button{padding:10px;width:100%;background:#0f766e;color:white;border:none;border-radius:8px;}
-.link{cursor:pointer;color:#0f766e;font-size:13px;}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  background:
+  linear-gradient(135deg,#0f172a,#111827,#0f766e);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+/* BACKGROUND GLOW */
+body::before{
+  content:"";
+  position:absolute;
+  width:500px;
+  height:500px;
+  background:rgba(16,185,129,0.18);
+  border-radius:50%;
+  filter:blur(100px);
+  top:-120px;
+  right:-100px;
+}
+
+/* LOGIN BOX */
+.login-box{
+  position:relative;
+  z-index:2;
+
+  width:380px;
+
+  background:rgba(255,255,255,0.08);
+
+  backdrop-filter:blur(18px);
+
+  border:1px solid rgba(255,255,255,0.1);
+
+  padding:35px;
+
+  border-radius:28px;
+
+  box-shadow:
+  0 20px 50px rgba(0,0,0,0.35);
+
+  text-align:center;
+
+  color:white;
+}
+
+/* LOGO */
+.logo{
+  width:95px;
+  margin-bottom:15px;
+}
+
+/* TITLE */
+h2{
+  margin:0;
+  margin-bottom:8px;
+  font-size:28px;
+}
+
+.subtitle{
+  color:#cbd5e1;
+  font-size:14px;
+  margin-bottom:25px;
+}
+
+/* INPUTS */
+input,
+select{
+  width:100%;
+  padding:14px;
+  margin-bottom:16px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:rgba(255,255,255,0.12);
+
+  color:white;
+
+  font-size:14px;
+
+  outline:none;
+}
+
+input::placeholder{
+  color:#cbd5e1;
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:14px;
+
+  border:none;
+
+  border-radius:14px;
+
+  background:#10b981;
+
+  color:white;
+
+  font-size:15px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:0.25s;
+}
+
+button:hover{
+  background:#059669;
+  transform:translateY(-2px);
+}
+
+/* REMEMBER */
+.remember{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:18px;
+  font-size:14px;
+  color:#e2e8f0;
+}
+
+/* SHOW PASSWORD */
+.show-pass{
+  text-align:right;
+  margin-top:-8px;
+  margin-bottom:15px;
+  font-size:13px;
+  cursor:pointer;
+  color:#cbd5e1;
+}
+
+.show-pass:hover{
+  text-decoration:underline;
+}
+
+/* FOOTER */
+.footer{
+  margin-top:20px;
+  font-size:12px;
+  color:#94a3b8;
+}
+
 </style>
+
 </head>
 
 <body>
 
-<div class="box">
-<img src="logo.png" width="80"><h3>Family Portal</h3>
+<div class="login-box">
 
-<select id="type">
-<option value="family">Family</option>
-<option value="admin">Admin</option>
-</select>
+  <img src="logo.png" class="logo">
 
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
+  <h2>ILLATH AL KATHIRI</h2>
 
-<div id="rememberBox">
-<input type="checkbox" id="remember"> Remember Me
-</div>
+  <div class="subtitle">
+    Family Digital Portal
+  </div>
 
-<button onclick="login()">Login</button>
+  <select id="type">
+
+    <option value="family">
+      Family Login
+    </option>
+
+    <option value="admin">
+      Admin Login
+    </option>
+
+  </select>
+
+  <input
+    id="user"
+    placeholder="Username"
+  >
+
+  <input
+    id="pass"
+    type="password"
+    placeholder="Password"
+  >
+
+  <div
+    class="show-pass"
+    onclick="togglePassword()"
+  >
+    Show Password
+  </div>
+
+  <div
+    id="rememberBox"
+    class="remember"
+  >
+    <input
+      type="checkbox"
+      id="remember"
+      style="width:auto"
+    >
+
+    Remember Me
+  </div>
+
+  <button onclick="login()">
+    Login
+  </button>
+
+  <div class="footer">
+    Secure Family Access System
+  </div>
+
 </div>
 
 <script>
+
+/* AUTO LOGIN */
+
 if(localStorage.getItem("familyLogged")){
-location.href="home.html";
+
+  location.href = "home.html";
 }
+
+/* PASSWORD TOGGLE */
+
+function togglePassword(){
+
+  let p = document.getElementById("pass");
+
+  if(p.type === "password"){
+
+    p.type = "text";
+  }
+  else{
+
+    p.type = "password";
+  }
+}
+
+/* LOGIN */
 
 function login(){
-let t=type.value,u=user.value,p=pass.value;
 
-if(t==="admin" && u==="KathiriAdmin" && p==="Kathiriadmin@786#"){
-location.href="admin.html";
-}
-else if(t==="family" && u==="Kathiri House" && p==="Kathiri@786"){
-if(remember.checked) localStorage.setItem("familyLogged",true);
-location.href="home.html";
-}
-else alert("Invalid");
+  let type = document.getElementById("type").value;
+
+  let user = document.getElementById("user").value;
+
+  let pass = document.getElementById("pass").value;
+
+  /* ADMIN */
+
+  if(
+    type === "admin"
+    &&
+    user === "KathiriAdmin"
+    &&
+    pass === "Kathiriadmin@786#"
+  ){
+
+    location.href = "admin.html";
+
+    return;
+  }
+
+  /* FAMILY */
+
+  if(
+    type === "family"
+    &&
+    user === "Kathiri House"
+    &&
+    pass === "Kathiri@786"
+  ){
+
+    if(document.getElementById("remember").checked){
+
+      localStorage.setItem(
+        "familyLogged",
+        true
+      );
+    }
+
+    location.href = "home.html";
+
+    return;
+  }
+
+  alert("Invalid Login");
 }
 
-type.onchange=()=>{
-rememberBox.style.display = type.value==="family" ? "block":"none";
-}
+/* REMEMBER VISIBILITY */
+
+type.onchange = ()=>{
+
+  rememberBox.style.display =
+  type.value === "family"
+  ? "flex"
+  : "none";
+};
+
 </script>
 
 </body>
