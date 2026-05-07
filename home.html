@@ -1,102 +1,438 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <title>Illath Al Kathiri</title>
 
-<style>
-body{margin:0;font-family:Segoe UI;background:#f1f5f9;}
-.header{padding:15px;background:white;}
-.container{padding:20px;}
-.card{background:white;padding:15px;border-radius:10px;margin-bottom:10px;}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.box{background:white;padding:10px;border-radius:8px;text-align:center;}
-.today{border:2px solid green;}
-.done{opacity:0.5;}
-</style>
+<link rel="stylesheet" href="style.css">
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 </head>
 
 <body>
 
-<div class="header">
-<img src="logo.png" width="40"> ILLATH AL KATHIRI
+<div class="public-header">
+
+  <div style="display:flex;align-items:center;gap:12px">
+
+    <img src="logo.png" class="logo">
+
+    <div class="title">
+      ILLATH AL KATHIRI
+    </div>
+
+  </div>
+
+  <button class="primary-btn" onclick="openBirthdayPopup()">
+    🎂 Birthdays
+  </button>
+
 </div>
 
 <div class="container">
-<h3>Announcements</h3><div id="ann"></div>
-<h3>Mowlid</h3><div id="mow"></div>
-<h3>Tabarruk</h3><div id="tab"></div>
-<h3>Birthdays</h3><div id="bd"></div>
-<h3>Tree</h3><div id="tree"></div>
+
+  <!-- ANNOUNCEMENTS -->
+  <div class="section-title">📢 Announcements</div>
+
+  <div id="announcementSection"></div>
+
+  <!-- MOWLID -->
+  <div class="section-title">🕌 Mowlid</div>
+
+  <div id="mowlidSection"></div>
+
+  <!-- TABARRUK -->
+  <div class="section-title">🍽️ Tabarruk</div>
+
+  <div id="tabarrukSection"></div>
+
+  <!-- BIRTHDAYS -->
+  <div class="section-title">🎂 Today's Birthdays</div>
+
+  <div id="birthdaySection"></div>
+
+</div>
+
+<!-- BIRTHDAY POPUP -->
+<div id="birthdayPopup" class="popup">
+
+  <div class="popup-box">
+
+    <h2>🎂 Family Birthdays</h2>
+
+    <div id="birthdayPopupList"></div>
+
+    <br>
+
+    <button class="primary-btn"
+    onclick="closeBirthdayPopup()">
+      Close
+    </button>
+
+  </div>
+
 </div>
 
 <script>
-const firebaseConfig={
-apiKey:"AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
-authDomain:"family-6889b.firebaseapp.com",
-databaseURL:"https://family-6889b-default-rtdb.firebaseio.com",
-projectId:"family-6889b"
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
+  authDomain: "family-6889b.firebaseapp.com",
+  databaseURL: "https://family-6889b-default-rtdb.firebaseio.com",
+  projectId: "family-6889b"
 };
+
 firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
 
-let m,t,b,a,p;
+const db = firebase.database();
 
-/* LOAD */
-db.ref("mowlid").on("value",s=>{m=s.val();render();});
-db.ref("tabarruk").on("value",s=>{t=s.val();render();});
-db.ref("birthdays").on("value",s=>{b=s.val();render();});
-db.ref("announcements").on("value",s=>{a=s.val();render();});
-db.ref("people").on("value",s=>{p=s.val();renderTree();});
+let mowlidData = null;
+let tabData = {};
+let birthdayData = {};
+let announcementData = {};
 
-/* RENDER */
-function render(){
-let now=new Date();
+let todayIndex = -1;
 
-/* ANN */
-let ah="";
-for(let i in a){
-let f=new Date(a[i].from),to=new Date(a[i].to);
-if(now>=f&&now<=to){
-ah+=`<div class="card">${a[i].title}<br>${a[i].text}</div>`;
-}
-}
-ann.innerHTML=ah;
+/* ===========================
+   LOAD DATA
+=========================== */
 
-/* MOWLID */
-if(m){
-mow.innerHTML=`<div class="card">${m.name}</div>`;
+db.ref("mowlid").on("value",s=>{
+  mowlidData = s.val();
+  renderAll();
+});
+
+db.ref("tabarruk").on("value",s=>{
+  tabData = s.val() || {};
+  renderAll();
+});
+
+db.ref("birthdays").on("value",s=>{
+  birthdayData = s.val() || {};
+  renderAll();
+});
+
+db.ref("announcements").on("value",s=>{
+  announcementData = s.val() || {};
+  renderAll();
+});
+
+/* ===========================
+   MAIN RENDER
+=========================== */
+
+function renderAll(){
+
+  let now = new Date();
+
+  /* ======================
+     📢 ANNOUNCEMENTS
+  ====================== */
+
+  let annHTML = "";
+
+  let foundAnnouncement = false;
+
+  for(let id in announcementData){
+
+    let a = announcementData[id];
+
+    let from = new Date(a.from);
+    let to = new Date(a.to);
+
+    if(now >= from && now <= to){
+
+      foundAnnouncement = true;
+
+      annHTML += `
+
+        <div class="card">
+
+          <h3>${a.title}</h3>
+
+          <div>${a.text}</div>
+
+          <br>
+
+          <small>
+            ${from.toDateString()}
+            →
+            ${to.toDateString()}
+          </small>
+
+        </div>
+      `;
+    }
+  }
+
+  if(!foundAnnouncement){
+
+    annHTML = `
+      <div class="card empty">
+        No Active Announcements
+      </div>
+    `;
+  }
+
+  announcementSection.innerHTML = annHTML;
+
+  /* ======================
+     🕌 MOWLID
+  ====================== */
+
+  if(mowlidData){
+
+    let start = new Date(mowlidData.start);
+
+    let end = new Date(start);
+
+    end.setDate(end.getDate() + mowlidData.days - 1);
+
+    let diff = Math.floor(
+      (now - start) / (1000*60*60*24)
+    );
+
+    todayIndex = -1;
+
+    let status = "Upcoming";
+
+    let badge = "badge-upcoming";
+
+    if(diff >= 0 && diff < mowlidData.days){
+
+      todayIndex = diff;
+
+      status = "Started";
+
+      badge = "badge-started";
+    }
+
+    if(diff >= mowlidData.days){
+
+      status = "Completed";
+
+      badge = "badge-completed";
+
+      todayIndex = mowlidData.days - 1;
+    }
+
+    mowlidSection.innerHTML = `
+
+      <div class="card">
+
+        <div style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+        ">
+
+          <div>
+
+            <h2>${mowlidData.name}</h2>
+
+            <small>
+              ${start.toDateString()}
+              →
+              ${end.toDateString()}
+            </small>
+
+            <br><br>
+
+            <b>
+              ${
+                todayIndex >= 0
+                ? "Day " + (todayIndex+1)
+                : "Not Started"
+              }
+            </b>
+
+          </div>
+
+          <div>
+
+            <span class="badge ${badge}">
+              ${status}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }
+  else{
+
+    mowlidSection.innerHTML = `
+      <div class="card empty">
+        No Mowlid Scheduled
+      </div>
+    `;
+  }
+
+  /* ======================
+     🍽️ TABARRUK
+  ====================== */
+
+  let tabHTML = `
+    <div class="grid">
+  `;
+
+  let i = 0;
+
+  for(let day in tabData){
+
+    let cls = "tab-box";
+
+    if(i === todayIndex){
+      cls += " today-box";
+    }
+
+    if(i < todayIndex){
+      cls += " completed-box";
+    }
+
+    tabHTML += `
+
+      <div class="${cls}">
+
+        <h3>Day ${i+1}</h3>
+
+        <div>
+          ${tabData[day].name || "-"}
+        </div>
+
+        <br>
+
+        <small>
+          ${tabData[day].remarks || ""}
+        </small>
+
+      </div>
+    `;
+
+    i++;
+  }
+
+  tabHTML += `</div>`;
+
+  if(i === 0){
+
+    tabHTML = `
+      <div class="card empty">
+        No Tabarruk Added
+      </div>
+    `;
+  }
+
+  tabarrukSection.innerHTML = tabHTML;
+
+  /* ======================
+     🎂 BIRTHDAYS
+  ====================== */
+
+  let birthdayHTML = "";
+
+  let hasBirthday = false;
+
+  for(let id in birthdayData){
+
+    let b = birthdayData[id];
+
+    let dob = new Date(b.dob);
+
+    if(
+      dob.getDate() === now.getDate()
+      &&
+      dob.getMonth() === now.getMonth()
+    ){
+
+      hasBirthday = true;
+
+      let age =
+        now.getFullYear()
+        -
+        dob.getFullYear();
+
+      birthdayHTML += `
+
+        <div class="card">
+
+          <h3>${b.name}</h3>
+
+          <div>
+            Turns ${age} 🎂
+          </div>
+
+          <br>
+
+          <small>
+            🎉 Happy Birthday!
+            May Allah bless you
+          </small>
+
+        </div>
+      `;
+    }
+  }
+
+  if(!hasBirthday){
+
+    birthdayHTML = `
+      <div class="card empty">
+        No Birthdays Today
+      </div>
+    `;
+  }
+
+  birthdaySection.innerHTML = birthdayHTML;
 }
 
-/* TAB */
-let th='<div class="grid">';
-let i=0;
-for(let k in t){
-th+=`<div class="box">${t[k].name||"-"}</div>`;
-}
-th+='</div>';
-tab.innerHTML=th;
+/* ===========================
+   🎂 POPUP
+=========================== */
 
-/* BD */
-let bh="";
-for(let i in b){
-let d=new Date(b[i].dob);
-let age=new Date().getFullYear()-d.getFullYear();
-bh+=`<div class="card">${b[i].name}<br>Turns ${age}</div>`;
-}
-bd.innerHTML=bh;
+function openBirthdayPopup(){
+
+  birthdayPopup.style.display = "flex";
+
+  let html = "";
+
+  for(let id in birthdayData){
+
+    let b = birthdayData[id];
+
+    let dob = new Date(b.dob);
+
+    let age =
+      new Date().getFullYear()
+      -
+      dob.getFullYear();
+
+    html += `
+
+      <div class="card">
+
+        <b>${b.name}</b>
+
+        <br>
+
+        Turns ${age}
+
+      </div>
+    `;
+  }
+
+  birthdayPopupList.innerHTML = html;
 }
 
-/* TREE */
-function renderTree(){
-let h="";
-for(let i in p){
-h+=`<div class="card">${p[i].name}</div>`;
+function closeBirthdayPopup(){
+
+  birthdayPopup.style.display = "none";
 }
-tree.innerHTML=h;
-}
+
 </script>
 
 </body>
