@@ -313,3 +313,44 @@ textarea:focus{
   border-radius:20px;
   font-size:12px;
 }
+/* =========================
+   🌳 TREE CONNECTOR ENGINE
+========================= */
+
+.tree-svg{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:visible;
+}
+
+.tree-area{
+  position:relative;
+  min-height:500px;
+  padding:40px 20px;
+}
+
+.generation{
+  position:relative;
+  z-index:2;
+}
+
+.person-card{
+  position:relative;
+  z-index:3;
+}
+
+.connector-line{
+  stroke:#cbd5e1;
+  stroke-width:3;
+  fill:none;
+  stroke-linecap:round;
+}
+
+.connector-line.spouse{
+  stroke-dasharray:8 6;
+  stroke:#f59e0b;
+}
