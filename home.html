@@ -567,7 +567,7 @@ function switchTree(id){
 }
 
 function renderFamilyTree(){
-
+ 
   if(!activeTree) return;
 
   let people = [];
@@ -622,8 +622,15 @@ function renderFamilyTree(){
   buildGeneration(roots,0);
 
   let html = `
-    <div class="tree-wrapper">
-  `;
+  <div class="tree-wrapper">
+
+    <div class="tree-area">
+
+      <svg
+        class="tree-svg"
+        id="treeSVG"
+      ></svg>
+`;
 
   generations.forEach(gen=>{
 
@@ -653,8 +660,10 @@ function renderFamilyTree(){
 
       html += `
 
-      <div class="
-        person-card
+      <div
+  id="person-${person.id}"
+  class="
+    person-card
         ${shared?'shared-person':''}
       ">
 
@@ -705,11 +714,156 @@ function renderFamilyTree(){
     `;
   });
 
-  html += `
+html += `
     </div>
+  </div>
   `;
 
   familyTreeContainer.innerHTML = html;
+  setTimeout(drawTreeLines,100);
+  
+}
+  
+ /* =========================
+   🌳 DRAW CONNECTOR LINES
+========================= */
+
+function drawTreeLines(){
+
+  let svg = document.getElementById("treeSVG");
+
+  if(!svg) return;
+
+  svg.innerHTML = "";
+
+  for(let id in peopleData){
+
+    let p = peopleData[id];
+
+    if(
+      !p.trees
+      ||
+      !p.trees[activeTree]
+    ) continue;
+
+    let child =
+      document.getElementById(
+        "person-"+id
+      );
+
+    if(!child) continue;
+
+    /* ======================
+       FATHER LINE
+    ====================== */
+
+    if(p.father){
+
+      let parent =
+        document.getElementById(
+          "person-"+p.father
+        );
+
+      if(parent){
+
+        let pRect =
+          parent.getBoundingClientRect();
+
+        let cRect =
+          child.getBoundingClientRect();
+
+        let svgRect =
+          svg.getBoundingClientRect();
+
+        let x1 =
+          pRect.left +
+          pRect.width/2 -
+          svgRect.left;
+
+        let y1 =
+          pRect.bottom -
+          svgRect.top;
+
+        let x2 =
+          cRect.left +
+          cRect.width/2 -
+          svgRect.left;
+
+        let y2 =
+          cRect.top -
+          svgRect.top;
+
+        let path = `
+          M ${x1} ${y1}
+          V ${(y1+y2)/2}
+          H ${x2}
+          V ${y2}
+        `;
+
+        svg.innerHTML += `
+          <path
+            d="${path}"
+            class="connector-line"
+          />
+        `;
+      }
+    }
+
+    /* ======================
+       SPOUSE LINE
+    ====================== */
+
+    if(p.spouse){
+
+      let spouse =
+        document.getElementById(
+          "person-"+p.spouse
+        );
+
+      if(spouse){
+
+        let a =
+          child.getBoundingClientRect();
+
+        let b =
+          spouse.getBoundingClientRect();
+
+        let svgRect =
+          svg.getBoundingClientRect();
+
+        let x1 =
+          a.right -
+          svgRect.left;
+
+        let y1 =
+          a.top +
+          a.height/2 -
+          svgRect.top;
+
+        let x2 =
+          b.left -
+          svgRect.left;
+
+        let y2 =
+          b.top +
+          b.height/2 -
+          svgRect.top;
+
+        svg.innerHTML += `
+          <line
+            x1="${x1}"
+            y1="${y1}"
+            x2="${x2}"
+            y2="${y2}"
+            class="
+              connector-line
+              spouse
+            "
+          />
+        `;
+      }
+    }
+  }
 }
 </script>
 
