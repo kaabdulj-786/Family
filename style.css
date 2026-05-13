@@ -231,3 +231,85 @@ textarea:focus{
   text-align:center;
   color:gray;
 }
+/* =========================
+   🌳 FAMILY TREE
+========================= */
+
+#treeTabs{
+  display:flex;
+  gap:12px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.tree-tab{
+  padding:10px 18px;
+  background:white;
+  border-radius:30px;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.06);
+  transition:0.25s;
+  font-weight:600;
+}
+
+.tree-tab:hover{
+  transform:translateY(-2px);
+}
+
+.tree-tab.active{
+  background:#0f766e;
+  color:white;
+}
+
+.tree-wrapper{
+  overflow-x:auto;
+  padding-bottom:20px;
+}
+
+.generation{
+  display:flex;
+  gap:25px;
+  margin-bottom:50px;
+  min-width:max-content;
+}
+
+.person-card{
+  min-width:220px;
+  background:white;
+  border-radius:22px;
+  padding:18px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.08);
+  transition:0.25s;
+  position:relative;
+}
+
+.person-card:hover{
+  transform:translateY(-4px);
+}
+
+.person-name{
+  font-size:20px;
+  font-weight:700;
+  color:#111827;
+}
+
+.person-meta{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:14px;
+}
+
+.shared-person{
+  border:2px solid #f59e0b;
+}
+
+.shared-badge{
+  position:absolute;
+  top:12px;
+  right:12px;
+  background:#f59e0b;
+  color:white;
+  padding:4px 10px;
+  border-radius:20px;
+  font-size:12px;
+}
