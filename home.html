@@ -52,6 +52,13 @@
   <div class="section-title">🎂 Today's Birthdays</div>
 
   <div id="birthdaySection"></div>
+  <div class="section-title">
+  🌳 Family Tree
+</div>
+
+<div id="treeTabs"></div>
+
+<div id="familyTreeContainer"></div>
 
 </div>
 
@@ -94,6 +101,9 @@ let birthdayData = {};
 let announcementData = {};
 let statusData = {};
 let todayIndex = -1;
+let treesData = {};
+let peopleData = {};
+let activeTree = null;
 
 /* ===========================
    LOAD DATA
@@ -121,6 +131,15 @@ db.ref("announcements").on("value",s=>{
 db.ref("mowlidStatus").on("value",s=>{
   statusData = s.val() || {};
   renderAll();
+});
+  db.ref("trees").on("value",s=>{
+  treesData = s.val() || {};
+  renderTreeTabs();
+});
+
+db.ref("people").on("value",s=>{
+  peopleData = s.val() || {};
+  renderFamilyTree();
 });
 /* ===========================
    MAIN RENDER
@@ -499,7 +518,199 @@ function closeBirthdayPopup(){
 
   birthdayPopup.style.display = "none";
 }
+/* =========================
+   🌳 PUBLIC TREE VIEW
+========================= */
 
+function renderTreeTabs(){
+
+  let html = "";
+
+  let first = null;
+
+  for(let id in treesData){
+
+    if(!first) first = id;
+
+    html += `
+      <div
+        class="
+          tree-tab
+          ${activeTree===id?'active':''}
+        "
+        onclick="switchTree('${id}')"
+      >
+        ${treesData[id].name}
+      </div>
+    `;
+  }
+
+  treeTabs.innerHTML = html;
+
+  if(!activeTree && first){
+
+    activeTree = first;
+
+    renderTreeTabs();
+
+    renderFamilyTree();
+  }
+}
+
+function switchTree(id){
+
+  activeTree = id;
+
+  renderTreeTabs();
+
+  renderFamilyTree();
+}
+
+function renderFamilyTree(){
+
+  if(!activeTree) return;
+
+  let people = [];
+
+  for(let id in peopleData){
+
+    let p = peopleData[id];
+
+    if(
+      p.trees &&
+      p.trees[activeTree]
+    ){
+
+      people.push({
+        id:id,
+        ...p
+      });
+    }
+  }
+
+  /* ROOT PEOPLE */
+
+  let roots = people.filter(
+    p => !p.father
+  );
+
+  let generations = [];
+
+  function buildGeneration(nodes,level){
+
+    if(!generations[level])
+      generations[level]=[];
+
+    nodes.forEach(n=>{
+
+      generations[level].push(n);
+
+      let children = people.filter(
+        p => p.father === n.id
+      );
+
+      if(children.length){
+
+        buildGeneration(
+          children,
+          level+1
+        );
+      }
+    });
+  }
+
+  buildGeneration(roots,0);
+
+  let html = `
+    <div class="tree-wrapper">
+  `;
+
+  generations.forEach(gen=>{
+
+    html += `
+      <div class="generation">
+    `;
+
+    gen.forEach(person=>{
+
+      let spouseName = "";
+
+      if(
+        person.spouse &&
+        peopleData[person.spouse]
+      ){
+        spouseName =
+          peopleData[
+            person.spouse
+          ].name;
+      }
+
+      let shared =
+        person.trees &&
+        Object.keys(
+          person.trees
+        ).length > 1;
+
+      html += `
+
+      <div class="
+        person-card
+        ${shared?'shared-person':''}
+      ">
+
+        ${
+          shared
+          ?
+          `
+          <div class="shared-badge">
+            Shared
+          </div>
+          `
+          :
+          ""
+        }
+
+        <div class="person-name">
+          ${person.name}
+        </div>
+
+        <div class="person-meta">
+
+          ${
+            spouseName
+            ?
+            `
+            Spouse:
+            ${spouseName}
+            <br>
+            `
+            :
+            ""
+          }
+
+          ${
+            person.gender==="male"
+            ? "👨 Male"
+            : "👩 Female"
+          }
+
+        </div>
+
+      </div>
+      `;
+    });
+
+    html += `
+      </div>
+    `;
+  });
+
+  html += `
+    </div>
+  `;
+
+  familyTreeContainer.innerHTML = html;
+}
 </script>
 
 </body>
