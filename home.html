@@ -588,38 +588,130 @@ function renderFamilyTree(){
     }
   }
 
-  /* ROOT PEOPLE */
+/* =========================
+   🌳 FAMILY UNIT GENERATION
+========================= */
 
-  let roots = people.filter(
-    p => !p.father
-  );
+let roots = people.filter(
+  p => !p.father
+);
 
-  let generations = [];
+let generations = [];
 
-  function buildGeneration(nodes,level){
+let processed = new Set();
+let expandedCouples = new Set();
 
-    if(!generations[level])
-      generations[level]=[];
+function buildGeneration(nodes,level){
 
-    nodes.forEach(n=>{
-
-      generations[level].push(n);
-
-      let children = people.filter(
-        p => p.father === n.id
-      );
-
-      if(children.length){
-
-        buildGeneration(
-          children,
-          level+1
-        );
-      }
-    });
+  if(!generations[level]){
+    generations[level] = [];
   }
 
-  buildGeneration(roots,0);
+  nodes.forEach(person=>{
+
+    if(processed.has(person.id)) return;
+
+    processed.add(person.id);
+
+    let spouse = null;
+
+
+/* ======================
+   FIND SPOUSE
+====================== */
+
+let minimalOnly = false;
+
+if(
+  person.spouse &&
+  peopleData[person.spouse]
+){
+
+  let s = peopleData[person.spouse];
+
+  if(
+    s.trees &&
+    s.trees[activeTree]
+  ){
+
+    let pairKey =
+      [person.id,s.id]
+      .sort()
+      .join("-");
+
+    /* ======================
+       ALREADY EXPANDED?
+    ====================== */
+
+    if(
+      expandedCouples.has(pairKey)
+    ){
+
+      minimalOnly = true;
+    }
+
+    else{
+
+      spouse = {
+        id:person.spouse,
+        ...s
+      };
+
+      expandedCouples.add(
+        pairKey
+      );
+
+      processed.add(spouse.id);
+    }
+  }
+}
+
+    /* ======================
+       CREATE FAMILY UNIT
+    ====================== */
+
+let familyUnit = {
+
+  mainPerson:person,
+
+  spouse:spouse,
+
+  minimalOnly:minimalOnly,
+
+  children:[]
+};
+
+    /* ======================
+       FIND CHILDREN
+    ====================== */
+
+    let children = people.filter(
+      p => p.father === person.id
+    );
+
+    if(!minimalOnly){
+  familyUnit.children = children;
+}
+
+    generations[level].push(
+      familyUnit
+    );
+
+    /* ======================
+       NEXT GENERATION
+    ====================== */
+
+    if(children.length){
+
+      buildGeneration(
+        children,
+        level+1
+      );
+    }
+  });
+}
+
+buildGeneration(roots,0);
 
   let html = `
   <div class="tree-wrapper">
@@ -638,67 +730,82 @@ function renderFamilyTree(){
       <div class="generation">
     `;
 
-    gen.forEach(person=>{
+gen.forEach(unit=>{
 
-      let spouseName = "";
+  let person = unit.mainPerson;
 
-      if(
-        person.spouse &&
-        peopleData[person.spouse]
-      ){
-        spouseName =
-          peopleData[
-            person.spouse
-          ].name;
+  let spouse = unit.spouse;
+
+  let shared =
+    person.trees &&
+    Object.keys(
+      person.trees
+    ).length > 1;
+
+  html += `
+
+  <div class="family-unit">
+
+    <!-- MAIN PERSON -->
+
+    <div
+      id="person-${person.id}"
+      class="
+        person-card
+        ${shared?'shared-person':''}
+      "
+    >
+
+      ${
+        shared
+        ?
+        `
+        <div class="shared-badge">
+          Shared
+        </div>
+        `
+        :
+        ""
       }
 
-      let shared =
-        person.trees &&
-        Object.keys(
-          person.trees
-        ).length > 1;
+      <div class="person-name">
+        ${person.name}
+      </div>
 
-      html += `
-
-      <div
-  id="person-${person.id}"
-  class="
-    person-card
-        ${shared?'shared-person':''}
-      ">
+      <div class="person-meta">
 
         ${
-          shared
-          ?
-          `
-          <div class="shared-badge">
-            Shared
-          </div>
-          `
-          :
-          ""
+          person.gender==="male"
+          ? "👨 Male"
+          : "👩 Female"
         }
 
+      </div>
+
+    </div>
+
+    ${
+      spouse
+      ?
+      `
+
+      <!-- SPOUSE -->
+
+      <div class="spouse-link"></div>
+
+      <div
+        id="person-${spouse.id}"
+        class="person-card spouse-card"
+      >
+
         <div class="person-name">
-          ${person.name}
+          ${spouse.name}
         </div>
 
         <div class="person-meta">
 
           ${
-            spouseName
-            ?
-            `
-            Spouse:
-            ${spouseName}
-            <br>
-            `
-            :
-            ""
-          }
-
-          ${
-            person.gender==="male"
+            spouse.gender==="male"
             ? "👨 Male"
             : "👩 Female"
           }
@@ -706,8 +813,15 @@ function renderFamilyTree(){
         </div>
 
       </div>
-      `;
-    });
+
+      `
+      :
+      ""
+    }
+
+  </div>
+  `;
+});
 
     html += `
       </div>
@@ -724,10 +838,6 @@ html += `
   
 }
   
- /* =========================
-   🌳 DRAW CONNECTOR LINES
-========================= */
-
 function drawTreeLines(){
 
   let svg = document.getElementById("treeSVG");
@@ -736,134 +846,120 @@ function drawTreeLines(){
 
   svg.innerHTML = "";
 
-  for(let id in peopleData){
+  let svgRect =
+    svg.getBoundingClientRect();
 
-    let p = peopleData[id];
+  /* ======================
+     LOOP FAMILY UNITS
+  ====================== */
 
-    if(
-      !p.trees
-      ||
-      !p.trees[activeTree]
-    ) continue;
+  let familyUnits =
+    document.querySelectorAll(
+      ".family-unit"
+    );
 
-    let child =
-      document.getElementById(
-        "person-"+id
+  familyUnits.forEach(unit=>{
+
+    let cards =
+      unit.querySelectorAll(
+        ".person-card"
       );
 
-    if(!child) continue;
+    if(cards.length === 0) return;
 
     /* ======================
-       FATHER LINE
+       FIND FAMILY CENTER
     ====================== */
 
-    if(p.father){
+    let firstRect =
+      cards[0].getBoundingClientRect();
 
-      let parent =
-        document.getElementById(
-          "person-"+p.father
-        );
+    let lastRect =
+      cards[
+        cards.length - 1
+      ].getBoundingClientRect();
 
-      if(parent){
+    let centerX =
+      (
+        firstRect.left +
+        lastRect.right
+      ) / 2
+      -
+      svgRect.left;
 
-        let pRect =
-          parent.getBoundingClientRect();
-
-        let cRect =
-          child.getBoundingClientRect();
-
-        let svgRect =
-          svg.getBoundingClientRect();
-
-        let x1 =
-          pRect.left +
-          pRect.width/2 -
-          svgRect.left;
-
-        let y1 =
-          pRect.bottom -
-          svgRect.top;
-
-        let x2 =
-          cRect.left +
-          cRect.width/2 -
-          svgRect.left;
-
-        let y2 =
-          cRect.top -
-          svgRect.top;
-
-        let path = `
-          M ${x1} ${y1}
-          V ${(y1+y2)/2}
-          H ${x2}
-          V ${y2}
-        `;
-
-        svg.innerHTML += `
-          <path
-            d="${path}"
-            class="connector-line"
-          />
-        `;
-      }
-    }
+    let centerY =
+      firstRect.bottom
+      -
+      svgRect.top;
 
     /* ======================
-       SPOUSE LINE
+       FIND MAIN PERSON
     ====================== */
 
-    if(p.spouse){
+    let mainCard = cards[0];
 
-      let spouse =
+    let mainId =
+      mainCard.id.replace(
+        "person-",
+        ""
+      );
+
+    /* ======================
+       FIND CHILDREN
+    ====================== */
+
+    for(let id in peopleData){
+
+      let child =
+        peopleData[id];
+
+      if(
+        child.father !== mainId
+      ) continue;
+
+      if(
+        !child.trees
+        ||
+        !child.trees[activeTree]
+      ) continue;
+
+      let childCard =
         document.getElementById(
-          "person-"+p.spouse
+          "person-"+id
         );
 
-      if(spouse){
+      if(!childCard) continue;
 
-        let a =
-          child.getBoundingClientRect();
+      let childRect =
+        childCard.getBoundingClientRect();
 
-        let b =
-          spouse.getBoundingClientRect();
+      let childX =
+        childRect.left +
+        childRect.width/2 -
+        svgRect.left;
 
-        let svgRect =
-          svg.getBoundingClientRect();
+      let childY =
+        childRect.top -
+        svgRect.top;
 
-        let x1 =
-          a.right -
-          svgRect.left;
+      let midY =
+        (centerY + childY)/2;
 
-        let y1 =
-          a.top +
-          a.height/2 -
-          svgRect.top;
+      let path = `
+        M ${centerX} ${centerY}
+        V ${midY}
+        H ${childX}
+        V ${childY}
+      `;
 
-        let x2 =
-          b.left -
-          svgRect.left;
-
-        let y2 =
-          b.top +
-          b.height/2 -
-          svgRect.top;
-
-        svg.innerHTML += `
-          <line
-            x1="${x1}"
-            y1="${y1}"
-            x2="${x2}"
-            y2="${y2}"
-            class="
-              connector-line
-              spouse
-            "
-          />
-        `;
-      }
+      svg.innerHTML += `
+        <path
+          d="${path}"
+          class="connector-line"
+        />
+      `;
     }
-  }
+  });
 }
 </script>
 
