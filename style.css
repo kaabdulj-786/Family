@@ -354,3 +354,22 @@ textarea:focus{
   stroke-dasharray:8 6;
   stroke:#f59e0b;
 }
+.family-unit{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin:20px;
+  position:relative;
+}
+
+.spouse-link{
+  width:40px;
+  height:3px;
+  background:#555;
+  border-radius:10px;
+}
+
+.spouse-card{
+  background:#fff7ed;
+}
