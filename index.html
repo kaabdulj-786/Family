@@ -17,14 +17,13 @@ body{
   font-family:'Segoe UI',sans-serif;
   background:
   linear-gradient(135deg,#0f172a,#111827,#0f766e);
-  height:100vh;
+  min-height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
   overflow:hidden;
 }
 
-/* BACKGROUND GLOW */
 body::before{
   content:"";
   position:absolute;
@@ -37,42 +36,30 @@ body::before{
   right:-100px;
 }
 
-/* LOGIN BOX */
 .login-box{
   position:relative;
   z-index:2;
-
   width:380px;
-
+  max-width:90vw;
   background:rgba(255,255,255,0.08);
-
   backdrop-filter:blur(18px);
-
   border:1px solid rgba(255,255,255,0.1);
-
   padding:35px;
-
   border-radius:28px;
-
-  box-shadow:
-  0 20px 50px rgba(0,0,0,0.35);
-
+  box-shadow:0 20px 50px rgba(0,0,0,0.35);
   text-align:center;
-
   color:white;
 }
 
-/* LOGO */
 .logo{
   width:95px;
   margin-bottom:15px;
 }
 
-/* TITLE */
 h2{
   margin:0;
   margin-bottom:8px;
-  font-size:28px;
+  font-size:26px;
 }
 
 .subtitle{
@@ -81,23 +68,16 @@ h2{
   margin-bottom:25px;
 }
 
-/* INPUTS */
 input,
 select{
   width:100%;
   padding:14px;
   margin-bottom:16px;
-
   border:none;
-
   border-radius:14px;
-
   background:rgba(255,255,255,0.12);
-
   color:white;
-
   font-size:14px;
-
   outline:none;
 }
 
@@ -105,25 +85,16 @@ input::placeholder{
   color:#cbd5e1;
 }
 
-/* BUTTON */
 button{
   width:100%;
   padding:14px;
-
   border:none;
-
   border-radius:14px;
-
   background:#10b981;
-
   color:white;
-
   font-size:15px;
-
   font-weight:600;
-
   cursor:pointer;
-
   transition:0.25s;
 }
 
@@ -132,7 +103,6 @@ button:hover{
   transform:translateY(-2px);
 }
 
-/* REMEMBER */
 .remember{
   display:flex;
   align-items:center;
@@ -142,7 +112,6 @@ button:hover{
   color:#e2e8f0;
 }
 
-/* SHOW PASSWORD */
 .show-pass{
   text-align:right;
   margin-top:-8px;
@@ -156,7 +125,13 @@ button:hover{
   text-decoration:underline;
 }
 
-/* FOOTER */
+.error-msg{
+  color:#fca5a5;
+  font-size:13px;
+  margin:-8px 0 14px;
+  min-height:16px;
+}
+
 .footer{
   margin-top:20px;
   font-size:12px;
@@ -171,152 +146,103 @@ button:hover{
 
 <div class="login-box">
 
-  <img src="logo.png" class="logo">
+  <img src="logo.png" class="logo" onerror="this.style.display='none'">
 
   <h2>ILLATH AL KATHIRI</h2>
 
-  <div class="subtitle">
-    Family Digital Portal
-  </div>
+  <div class="subtitle">Family Digital Portal</div>
 
   <select id="type">
-
-    <option value="family">
-      Family Login
-    </option>
-
-    <option value="admin">
-      Admin Login
-    </option>
-
+    <option value="family">Family Login</option>
+    <option value="admin">Admin Login</option>
   </select>
 
-  <input
-    id="user"
-    placeholder="Username"
-  >
+  <input id="user" placeholder="Username" autocomplete="username">
 
-  <input
-    id="pass"
-    type="password"
-    placeholder="Password"
-  >
+  <input id="pass" type="password" placeholder="Password" autocomplete="current-password">
 
-  <div
-    class="show-pass"
-    onclick="togglePassword()"
-  >
-    Show Password
-  </div>
+  <div class="show-pass" onclick="togglePassword()">Show Password</div>
 
-  <div
-    id="rememberBox"
-    class="remember"
-  >
-    <input
-      type="checkbox"
-      id="remember"
-      style="width:auto"
-    >
-
+  <div id="rememberBox" class="remember">
+    <input type="checkbox" id="remember" style="width:auto">
     Remember Me
   </div>
 
-  <button onclick="login()">
-    Login
-  </button>
+  <div id="errorMsg" class="error-msg"></div>
 
-  <div class="footer">
-    Secure Family Access System
-  </div>
+  <button onclick="login()">Login</button>
+
+  <div class="footer">Secure Family Access System</div>
 
 </div>
 
 <script>
 
-/* AUTO LOGIN */
-
+/* AUTO LOGIN IF REMEMBERED */
 if(localStorage.getItem("familyLogged")){
-
+  sessionStorage.setItem("familyLogged","1");
   location.href = "home.html";
 }
 
-/* PASSWORD TOGGLE */
-
 function togglePassword(){
-
   let p = document.getElementById("pass");
-
-  if(p.type === "password"){
-
-    p.type = "text";
-  }
-  else{
-
-    p.type = "password";
-  }
+  p.type = (p.type === "password") ? "text" : "password";
 }
 
-/* LOGIN */
+/*
+  NOTE ON SECURITY:
+  This is a client-side-only login check (no backend auth server).
+  It stops casual visitors from opening admin.html/home.html directly
+  without going through this page, but a technically determined person
+  could still bypass it. Real protection requires Firebase Authentication
+  + Firebase Security Rules on the database (a deferred Phase 6 item).
+*/
 
 function login(){
 
   let type = document.getElementById("type").value;
-
-  let user = document.getElementById("user").value;
-
+  let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value;
+  let errorMsg = document.getElementById("errorMsg");
 
-  /* ADMIN */
+  errorMsg.innerText = "";
 
   if(
-    type === "admin"
-    &&
-    user === "KathiriAdmin"
-    &&
+    type === "admin" &&
+    user === "KathiriAdmin" &&
     pass === "Kathiriadmin@786#"
   ){
-
+    sessionStorage.setItem("adminLogged","1");
     location.href = "admin.html";
-
     return;
   }
 
-  /* FAMILY */
-
   if(
-    type === "family"
-    &&
-    user === "Kathiri House"
-    &&
+    type === "family" &&
+    user === "Kathiri House" &&
     pass === "Kathiri@786"
   ){
+    sessionStorage.setItem("familyLogged","1");
 
     if(document.getElementById("remember").checked){
-
-      localStorage.setItem(
-        "familyLogged",
-        true
-      );
+      localStorage.setItem("familyLogged","1");
     }
 
     location.href = "home.html";
-
     return;
   }
 
-  alert("Invalid Login");
+  errorMsg.innerText = "Invalid username or password";
 }
 
-/* REMEMBER VISIBILITY */
-
-type.onchange = ()=>{
-
-  rememberBox.style.display =
-  type.value === "family"
-  ? "flex"
-  : "none";
+document.getElementById("type").onchange = function(){
+  document.getElementById("rememberBox").style.display =
+    (this.value === "family") ? "flex" : "none";
 };
+
+document.getElementById("pass").addEventListener("keydown", e=>{
+  if(e.key === "Enter") login();
+});
 
 </script>
 
