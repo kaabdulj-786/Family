@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Family Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="stylesheet" href="style.css">
 
@@ -13,17 +14,18 @@
 
 <div class="sidebar">
 
-  <img src="logo.png" class="logo-sidebar">
+  <img src="logo.png" class="logo-sidebar" onerror="this.style.display='none'">
 
   <h2>Family Admin</h2>
 
-  <button onclick="showSection('mowlid')">🕌 Mowlid</button>
-  <button onclick="showSection('tabarruk')">🍽️ Tabarruk</button>
-  <button onclick="showSection('birthdays')">🎂 Birthdays</button>
-  <button onclick="showSection('announcements')">📢 Announcements</button>
-<button onclick="showSection('tree')">
-  🌳 Family Tree
-</button>
+  <button data-target="mowlid" onclick="showSection('mowlid',this)">🕌 <span class="label">Mowlid</span></button>
+  <button data-target="tabarruk" onclick="showSection('tabarruk',this)">🍽️ <span class="label">Tabarruk</span></button>
+  <button data-target="birthdays" onclick="showSection('birthdays',this)">🎂 <span class="label">Birthdays</span></button>
+  <button data-target="announcements" onclick="showSection('announcements',this)">📢 <span class="label">Announcements</span></button>
+  <button data-target="tree" onclick="showSection('tree',this)">🌳 <span class="label">Family Tree</span></button>
+
+  <button class="logout-btn" onclick="logout()">🚪 <span class="label">Logout</span></button>
+
 </div>
 
 <div class="main">
@@ -33,46 +35,27 @@
 
     <div class="card">
       <h2>🕌 Mowlid</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        Set the schedule here. Day-to-day status (Not Started / Ongoing / Completed)
+        is updated by the family from the public site — not from here.
+      </p>
 
-      <input id="mName" placeholder="Mowlid Name">
+      <label class="field-label">Mowlid Name</label>
+      <input id="mName" placeholder="e.g. Subhana Mowlid">
 
-      <input id="mDays" type="number" placeholder="Number of Days">
+      <label class="field-label">Duration (Days)</label>
+      <input id="mDays" type="number" min="1" placeholder="e.g. 10">
 
+      <label class="field-label">Start Date</label>
       <input id="mStart" type="date">
 
-      <button class="primary-btn" onclick="saveMowlid()">
-        Save Mowlid
-      </button>
-
-      <br><br>
-
-      <button class="primary-btn" onclick="deleteMowlid()">
-        Delete Mowlid
-      </button>
-
+      <div class="btn-row">
+        <button class="primary-btn" onclick="saveMowlid()">Save Mowlid</button>
+        <button class="danger-btn" onclick="deleteMowlid()">Delete Mowlid</button>
+      </div>
     </div>
 
     <div id="mowlidPreview"></div>
-    <div class="card">
-
-  <h3>Today's Status</h3>
-
-  <button class="primary-btn"
-  onclick="updateStatus('notstarted')">
-    Not Started
-  </button>
-
-  <button class="primary-btn"
-  onclick="updateStatus('ongoing')">
-    Ongoing
-  </button>
-
-  <button class="primary-btn"
-  onclick="updateStatus('completed')">
-    Completed
-  </button>
-
-</div>
 
   </div>
 
@@ -81,15 +64,16 @@
 
     <div class="card">
       <h2>🍽️ Tabarruk</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        This table auto-generates when you save a Mowlid above (one row per day).
+        Fill in Name and Remarks for each day, then save.
+      </p>
 
       <div id="tabarrukList"></div>
 
       <br>
 
-      <button class="primary-btn" onclick="saveTabarruk()">
-        Save Tabarruk
-      </button>
-
+      <button class="primary-btn" onclick="saveTabarruk()">Save Tabarruk</button>
     </div>
 
   </div>
@@ -98,18 +82,21 @@
   <div id="birthdays" class="section">
 
     <div class="card">
-
       <h2>🎂 Birthdays</h2>
 
-      <input id="bName" placeholder="Name">
+      <label class="field-label">Name</label>
+      <input id="bName" placeholder="Full Name">
 
+      <label class="field-label">Date of Birth</label>
       <input id="bDate" type="date">
 
-      <button class="primary-btn" onclick="addBirthday()">
-        Save Birthday
-      </button>
-
+      <div class="btn-row">
+        <button class="primary-btn" onclick="addBirthday()">Save Birthday</button>
+        <button class="secondary-btn" id="bCancelBtn" style="display:none" onclick="cancelBirthdayEdit()">Cancel Edit</button>
+      </div>
     </div>
+
+    <input id="bSearch" placeholder="🔍 Search birthdays..." oninput="renderBirthdayList()">
 
     <div id="birthdayList"></div>
 
@@ -119,94 +106,96 @@
   <div id="announcements" class="section">
 
     <div class="card">
-
       <h2>📢 Announcements</h2>
 
-      <input id="aTitle" placeholder="Title">
+      <label class="field-label">Title</label>
+      <input id="aTitle" placeholder="e.g. Hajj Departure">
 
-      <textarea id="aText" placeholder="Description"></textarea>
+      <label class="field-label">Description</label>
+      <textarea id="aText" placeholder="Details about the announcement"></textarea>
 
+      <label class="field-label">Visible From</label>
       <input id="aFrom" type="datetime-local">
 
+      <label class="field-label">Visible Until</label>
       <input id="aTo" type="datetime-local">
 
-      <button class="primary-btn" onclick="addAnnouncement()">
-        Save Announcement
-      </button>
-
+      <div class="btn-row">
+        <button class="primary-btn" onclick="addAnnouncement()">Save Announcement</button>
+        <button class="secondary-btn" id="aCancelBtn" style="display:none" onclick="cancelAnnouncementEdit()">Cancel Edit</button>
+      </div>
     </div>
 
     <div id="announcementList"></div>
 
   </div>
-<!-- FAMILY TREE -->
-<div id="tree" class="section">
 
-  <!-- CREATE TREE -->
-  <div class="card">
+  <!-- FAMILY TREE -->
+  <div id="tree" class="section">
 
-    <h2>🌳 Family Trees</h2>
+    <div class="card">
+      <h2>🌳 Family Trees</h2>
 
-    <input
-      id="treeName"
-      placeholder="Create New Tree"
-    >
+      <input id="treeName" placeholder="Create New Tree (e.g. Grandpa Ahmed's Line)">
 
-    <button
-      class="primary-btn"
-      onclick="createTree()"
-    >
-      Create Tree
-    </button>
+      <button class="primary-btn" onclick="createTree()">Create Tree</button>
 
-    <br><br>
+      <br><br>
 
-    <select id="treeSelect"></select>
+      <label class="field-label">Currently Editing</label>
+      <select id="treeSelect"></select>
+    </div>
+
+    <div class="card">
+      <h2>👤 Add New Person</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        Creates a brand new person in the currently selected tree.
+      </p>
+
+      <label class="field-label">Name</label>
+      <input id="pName" placeholder="Person Name">
+
+      <label class="field-label">Gender</label>
+      <select id="pGender">
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+      </select>
+
+      <label class="field-label">Father</label>
+      <select id="pFather">
+        <option value="">No Father (Root Person)</option>
+      </select>
+
+      <label class="field-label">Spouse</label>
+      <select id="pSpouse">
+        <option value="">No Spouse</option>
+      </select>
+
+      <button class="primary-btn" onclick="addPerson()">Save Person</button>
+    </div>
+
+    <div class="card">
+      <h2>🔗 Add Existing Person to This Tree</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        Use this when someone already exists in another tree (e.g. a spouse who
+        has their own family tree) and needs to appear here too — this links
+        the same person instead of creating a duplicate.
+      </p>
+
+      <select id="existingPersonSelect">
+        <option value="">Select a person...</option>
+      </select>
+
+      <button class="primary-btn" onclick="linkExistingPerson()">Add to This Tree</button>
+    </div>
+
+    <div class="card">
+      <h2>📋 Tree Members</h2>
+      <div id="peopleList"></div>
+    </div>
 
   </div>
 
-  <!-- ADD PERSON -->
-  <div class="card">
-
-    <h2>👤 Add Person</h2>
-
-    <input
-      id="pName"
-      placeholder="Person Name"
-    >
-
-    <select id="pGender">
-      <option value="male">Male</option>
-      <option value="female">Female</option>
-    </select>
-
-    <select id="pFather">
-      <option value="">No Father</option>
-    </select>
-
-    <select id="pSpouse">
-      <option value="">No Spouse</option>
-    </select>
-
-    <button
-      class="primary-btn"
-      onclick="addPerson()"
-    >
-      Save Person
-    </button>
-
-  </div>
-
-  <!-- LIVE PEOPLE -->
-  <div class="card">
-
-    <h2>📋 Tree Members</h2>
-
-    <div id="peopleList"></div>
-
-  </div>
-
-</div>
 </div>
 
 <div id="toast" class="toast"></div>
