@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
 /* ===== GLOBAL ===== */
 *{
   box-sizing:border-box;
@@ -5,9 +7,13 @@
 
 body{
   margin:0;
-  font-family:'Segoe UI',sans-serif;
+  font-family:'Inter',sans-serif;
   background:#f1f5f9;
   color:#1e293b;
+}
+
+h1,h2,h3,.title,.person-name,.sidebar h2{
+  font-family:'Poppins',sans-serif;
 }
 
 /* ===== SIDEBAR ===== */
@@ -21,6 +27,7 @@ body{
   color:white;
   padding:25px 20px;
   overflow:auto;
+  z-index:10;
 }
 
 .logo-sidebar{
@@ -32,7 +39,8 @@ body{
 .sidebar h2{
   text-align:center;
   margin-bottom:30px;
-  font-size:22px;
+  font-size:20px;
+  letter-spacing:0.5px;
 }
 
 .sidebar button{
@@ -44,6 +52,7 @@ body{
   background:rgba(255,255,255,0.08);
   color:white;
   font-size:15px;
+  text-align:left;
   cursor:pointer;
   transition:0.25s;
 }
@@ -51,6 +60,21 @@ body{
 .sidebar button:hover{
   background:#0f766e;
   transform:translateY(-2px);
+}
+
+.sidebar button.active{
+  background:#0f766e;
+}
+
+.sidebar .logout-btn{
+  margin-top:20px;
+  background:rgba(239,68,68,0.15);
+  color:#fca5a5;
+}
+
+.sidebar .logout-btn:hover{
+  background:#dc2626;
+  color:white;
 }
 
 /* ===== MAIN ===== */
@@ -76,6 +100,10 @@ body{
   margin-bottom:18px;
 }
 
+.card h2{
+  margin-top:0;
+}
+
 /* ===== INPUTS ===== */
 input,
 select,
@@ -88,12 +116,28 @@ textarea{
   border:1px solid #d1d5db;
   font-size:14px;
   outline:none;
+  font-family:'Inter',sans-serif;
+}
+
+textarea{
+  resize:vertical;
+  min-height:80px;
 }
 
 input:focus,
 select:focus,
 textarea:focus{
   border-color:#0f766e;
+}
+
+label.field-label{
+  display:block;
+  font-size:12px;
+  font-weight:600;
+  color:#64748b;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  margin-top:8px;
 }
 
 /* ===== BUTTON ===== */
@@ -106,11 +150,52 @@ textarea:focus{
   cursor:pointer;
   transition:0.25s;
   font-size:14px;
+  font-weight:600;
 }
 
 .primary-btn:hover{
   background:#115e59;
   transform:translateY(-2px);
+}
+
+.secondary-btn{
+  background:#e2e8f0;
+  color:#334155;
+  border:none;
+  padding:14px 20px;
+  border-radius:14px;
+  cursor:pointer;
+  transition:0.25s;
+  font-size:14px;
+  font-weight:600;
+}
+
+.secondary-btn:hover{
+  background:#cbd5e1;
+}
+
+.danger-btn{
+  background:#fee2e2;
+  color:#b91c1c;
+  border:none;
+  padding:10px 16px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:600;
+  transition:0.2s;
+}
+
+.danger-btn:hover{
+  background:#dc2626;
+  color:white;
+}
+
+.btn-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:6px;
 }
 
 /* ===== GRID ===== */
@@ -121,32 +206,54 @@ textarea:focus{
 }
 
 /* ===== TABARRUK ===== */
-.tab-box{
+.tab-table{
+  width:100%;
+  border-collapse:collapse;
   background:white;
-  border-radius:18px;
-  padding:18px;
+  border-radius:16px;
+  overflow:hidden;
   box-shadow:0 6px 18px rgba(0,0,0,0.05);
-  transition:0.25s;
 }
 
-.today-box{
-  border:2px solid #10b981;
+.tab-table th{
+  background:#0f172a;
+  color:white;
+  text-align:left;
+  padding:12px 16px;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+
+.tab-table td{
+  padding:12px 16px;
+  border-bottom:1px solid #e2e8f0;
+  font-size:14px;
+}
+
+.tab-table tr.today-row{
   background:#ecfdf5;
-  transform:scale(1.02);
+  font-weight:700;
 }
 
-.completed-box{
+.tab-table tr.past-row{
   opacity:0.5;
   text-decoration:line-through;
+}
+
+.tab-edit-row input{
+  margin:0;
+  padding:8px 10px;
 }
 
 /* ===== BADGE ===== */
 .badge{
   display:inline-block;
-  padding:6px 12px;
+  padding:6px 14px;
   border-radius:30px;
   font-size:12px;
-  font-weight:600;
+  font-weight:700;
+  letter-spacing:0.3px;
 }
 
 .badge-upcoming{
@@ -164,6 +271,11 @@ textarea:focus{
   color:#166534;
 }
 
+.badge-expired{
+  background:#f1f5f9;
+  color:#94a3b8;
+}
+
 /* ===== TOAST ===== */
 .toast{
   position:fixed;
@@ -171,10 +283,12 @@ textarea:focus{
   right:20px;
   background:#16a34a;
   color:white;
-  padding:14px 20px;
+  padding:14px 22px;
   border-radius:12px;
   display:none;
   z-index:999;
+  font-weight:600;
+  box-shadow:0 10px 25px rgba(0,0,0,0.2);
 }
 
 /* ===== PUBLIC ===== */
@@ -185,25 +299,90 @@ textarea:focus{
   align-items:center;
   justify-content:space-between;
   box-shadow:0 3px 15px rgba(0,0,0,0.05);
+  position:sticky;
+  top:0;
+  z-index:20;
 }
 
 .logo{
-  width:55px;
+  width:50px;
 }
 
 .title{
-  font-size:20px;
+  font-size:19px;
   font-weight:700;
+  letter-spacing:0.3px;
 }
 
 .container{
   padding:25px;
+  max-width:1100px;
+  margin:0 auto;
 }
 
 .section-title{
   margin:30px 0 14px;
   font-size:20px;
   font-weight:700;
+}
+
+/* ===== MOWLID PUBLIC CARD ===== */
+.mowlid-card{
+  background:white;
+  border-radius:24px;
+  padding:26px 30px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.06);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:20px;
+}
+
+.mowlid-left h2{
+  margin:0 0 6px;
+  font-size:24px;
+}
+
+.mowlid-day{
+  font-size:18px;
+  font-weight:700;
+  color:#0f766e;
+  margin-top:6px;
+}
+
+.mowlid-dates{
+  color:#64748b;
+  font-size:13px;
+  margin-top:10px;
+}
+
+.mowlid-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.edit-icon{
+  cursor:pointer;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#f1f5f9;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:15px;
+  transition:0.2s;
+  border:none;
+}
+
+.edit-icon:hover{
+  background:#e2e8f0;
+}
+
+.priority-glow{
+  border:2px solid #10b981;
 }
 
 /* ===== POPUP ===== */
@@ -219,20 +398,26 @@ textarea:focus{
 
 .popup-box{
   width:90%;
-  max-width:450px;
+  max-width:420px;
   background:white;
   border-radius:20px;
-  padding:25px;
+  padding:28px;
+}
+
+.popup-box h2{
+  margin-top:0;
 }
 
 /* ===== EMPTY ===== */
 .empty{
-  padding:20px;
+  padding:24px;
   text-align:center;
-  color:gray;
+  color:#94a3b8;
+  font-size:14px;
 }
+
 /* =========================
-   🌳 FAMILY TREE
+   FAMILY TREE
 ========================= */
 
 #treeTabs{
@@ -250,6 +435,7 @@ textarea:focus{
   box-shadow:0 4px 12px rgba(0,0,0,0.06);
   transition:0.25s;
   font-weight:600;
+  font-size:14px;
 }
 
 .tree-tab:hover{
@@ -266,21 +452,40 @@ textarea:focus{
   padding-bottom:20px;
 }
 
+.tree-area{
+  position:relative;
+  min-height:300px;
+  padding:40px 20px;
+}
+
 .generation{
+  position:relative;
+  z-index:2;
   display:flex;
   gap:25px;
-  margin-bottom:50px;
+  margin-bottom:60px;
   min-width:max-content;
+  justify-content:center;
+}
+
+.family-unit{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:14px;
+  margin:0 20px;
+  position:relative;
 }
 
 .person-card{
-  min-width:220px;
+  position:relative;
+  z-index:3;
+  min-width:200px;
   background:white;
-  border-radius:22px;
-  padding:18px;
+  border-radius:20px;
+  padding:16px 18px;
   box-shadow:0 8px 24px rgba(0,0,0,0.08);
   transition:0.25s;
-  position:relative;
 }
 
 .person-card:hover{
@@ -288,15 +493,27 @@ textarea:focus{
 }
 
 .person-name{
-  font-size:20px;
+  font-size:17px;
   font-weight:700;
   color:#111827;
 }
 
 .person-meta{
-  margin-top:10px;
+  margin-top:6px;
   color:#6b7280;
-  font-size:14px;
+  font-size:12.5px;
+  line-height:1.5;
+}
+
+.spouse-card{
+  background:#fff7ed;
+}
+
+.spouse-link{
+  width:32px;
+  height:3px;
+  background:#f59e0b;
+  border-radius:10px;
 }
 
 .shared-person{
@@ -305,17 +522,29 @@ textarea:focus{
 
 .shared-badge{
   position:absolute;
-  top:12px;
+  top:-10px;
   right:12px;
   background:#f59e0b;
   color:white;
-  padding:4px 10px;
+  padding:3px 10px;
   border-radius:20px;
-  font-size:12px;
+  font-size:10px;
+  font-weight:700;
 }
-/* =========================
-   🌳 TREE CONNECTOR ENGINE
-========================= */
+
+.minimal-card{
+  opacity:0.55;
+  background:#f8fafc;
+}
+
+.minimal-tag{
+  display:inline-block;
+  margin-top:6px;
+  font-size:10.5px;
+  font-weight:700;
+  color:#94a3b8;
+  text-transform:uppercase;
+}
 
 .tree-svg{
   position:absolute;
@@ -325,51 +554,63 @@ textarea:focus{
   height:100%;
   pointer-events:none;
   overflow:visible;
-}
-
-.tree-area{
-  position:relative;
-  min-height:500px;
-  padding:40px 20px;
-}
-
-.generation{
-  position:relative;
-  z-index:2;
-}
-
-.person-card{
-  position:relative;
-  z-index:3;
+  z-index:1;
 }
 
 .connector-line{
   stroke:#cbd5e1;
-  stroke-width:3;
+  stroke-width:2.5;
   fill:none;
   stroke-linecap:round;
 }
 
-.connector-line.spouse{
-  stroke-dasharray:8 6;
-  stroke:#f59e0b;
-}
-.family-unit{
+/* ===== UPCOMING BIRTHDAYS ===== */
+.upcoming-list{
   display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:14px;
-  margin:20px;
-  position:relative;
+  flex-direction:column;
+  gap:8px;
 }
 
-.spouse-link{
-  width:40px;
-  height:3px;
-  background:#555;
-  border-radius:10px;
+.upcoming-row{
+  display:flex;
+  justify-content:space-between;
+  padding:10px 16px;
+  background:white;
+  border-radius:14px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.04);
+  font-size:14px;
 }
 
-.spouse-card{
-  background:#fff7ed;
+.upcoming-when{
+  color:#0f766e;
+  font-weight:600;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+
+  .sidebar{
+    width:70px;
+    padding:15px 8px;
+  }
+
+  .sidebar h2,
+  .sidebar button span.label{
+    display:none;
+  }
+
+  .sidebar button{
+    text-align:center;
+    padding:12px 4px;
+  }
+
+  .main{
+    margin-left:70px;
+    padding:16px;
+  }
+
+  .mowlid-card{
+    flex-direction:column;
+    align-items:flex-start;
+  }
 }
