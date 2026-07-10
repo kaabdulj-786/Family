@@ -3,6 +3,7 @@
 <head>
 
 <title>Illath Al Kathiri</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="style.css">
 
@@ -16,73 +17,90 @@
 <div class="public-header">
 
   <div style="display:flex;align-items:center;gap:12px">
-
-    <img src="logo.png" class="logo">
-
-    <div class="title">
-      ILLATH AL KATHIRI
-    </div>
-
+    <img src="logo.png" class="logo" onerror="this.style.display='none'">
+    <div class="title">ILLATH AL KATHIRI</div>
   </div>
 
-  <button class="primary-btn" onclick="openBirthdayPopup()">
-    🎂 Birthdays
-  </button>
+  <button class="primary-btn" onclick="openBirthdayPopup()">🎂 Birthdays</button>
 
 </div>
 
-<div class="container">
+<div class="container" id="mainContainer">
 
-  <!-- ANNOUNCEMENTS -->
-  <div class="section-title">📢 Announcements</div>
+  <section id="sec-announcements">
+    <div class="section-title">📢 Announcements</div>
+    <div id="announcementSection"></div>
+  </section>
 
-  <div id="announcementSection"></div>
+  <section id="sec-mowlid">
+    <div class="section-title">🕌 Mowlid</div>
+    <div id="mowlidSection"></div>
+  </section>
 
-  <!-- MOWLID -->
-  <div class="section-title">🕌 Mowlid</div>
+  <section id="sec-tabarruk">
+    <div class="section-title">🍽️ Tabarruk</div>
+    <div id="tabarrukSection"></div>
+  </section>
 
-  <div id="mowlidSection"></div>
+  <section id="sec-birthdays">
+    <div class="section-title">🎂 Today's Birthdays</div>
+    <div id="birthdaySection"></div>
 
-  <!-- TABARRUK -->
-  <div class="section-title">🍽️ Tabarruk</div>
+    <div class="section-title" style="font-size:16px;margin-top:20px">✨ Upcoming Birthdays</div>
+    <div id="upcomingBirthdaySection"></div>
+  </section>
 
-  <div id="tabarrukSection"></div>
-
-  <!-- BIRTHDAYS -->
-  <div class="section-title">🎂 Today's Birthdays</div>
-
-  <div id="birthdaySection"></div>
-  <div class="section-title">
-  🌳 Family Tree
-</div>
-
-<div id="treeTabs"></div>
-
-<div id="familyTreeContainer"></div>
+  <section id="sec-tree">
+    <div class="section-title">🌳 Family Tree</div>
+    <div id="treeTabs"></div>
+    <div id="familyTreeContainer"></div>
+  </section>
 
 </div>
 
 <!-- BIRTHDAY POPUP -->
 <div id="birthdayPopup" class="popup">
-
   <div class="popup-box">
-
     <h2>🎂 Family Birthdays</h2>
-
     <div id="birthdayPopupList"></div>
-
     <br>
-
-    <button class="primary-btn"
-    onclick="closeBirthdayPopup()">
-      Close
-    </button>
-
+    <button class="primary-btn" onclick="closeBirthdayPopup()">Close</button>
   </div>
+</div>
 
+<!-- MOWLID STATUS EDIT POPUP -->
+<div id="statusPopup" class="popup">
+  <div class="popup-box">
+    <h2>Update Today's Status</h2>
+    <p style="color:#64748b;font-size:13px;margin-top:-10px">
+      Anyone in the family can update this — no admin needed.
+    </p>
+    <div class="btn-row" style="flex-direction:column">
+      <button class="secondary-btn" style="width:100%" onclick="setMowlidStatus('notstarted')">⬜ Not Started</button>
+      <button class="primary-btn" style="width:100%" onclick="setMowlidStatus('ongoing')">▶️ Started / Ongoing</button>
+      <button class="primary-btn" style="width:100%;background:#166534" onclick="setMowlidStatus('completed')">✅ Completed</button>
+    </div>
+    <br>
+    <button class="secondary-btn" style="width:100%" onclick="closeStatusPopup()">Cancel</button>
+  </div>
 </div>
 
 <script>
+
+/* ===========================
+   LOGIN GUARD
+=========================== */
+if(
+  !sessionStorage.getItem("familyLogged") &&
+  !sessionStorage.getItem("adminLogged") &&
+  !localStorage.getItem("familyLogged")
+){
+  location.href = "index.html";
+}
+
+/* ===========================
+   FIREBASE INIT
+=========================== */
 
 const firebaseConfig = {
   apiKey: "AIzaSyB4KiyI-vapW5rvY-VNKTHELfmkO3H4D0M",
@@ -101,46 +119,26 @@ let birthdayData = {};
 let announcementData = {};
 let statusData = {};
 let todayIndex = -1;
+let mowlidIsActivePeriod = false;
 let treesData = {};
 let peopleData = {};
 let activeTree = null;
+
+const COMPLETED_REVERT_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 /* ===========================
    LOAD DATA
 =========================== */
 
-db.ref("mowlid").on("value",s=>{
-  mowlidData = s.val();
-  renderAll();
-});
+db.ref("mowlid").on("value", s=>{ mowlidData = s.val(); renderAll(); });
+db.ref("tabarruk").on("value", s=>{ tabData = s.val() || {}; renderAll(); });
+db.ref("birthdays").on("value", s=>{ birthdayData = s.val() || {}; renderAll(); });
+db.ref("announcements").on("value", s=>{ announcementData = s.val() || {}; renderAll(); });
+db.ref("mowlidStatus").on("value", s=>{ statusData = s.val() || {}; renderAll(); });
 
-db.ref("tabarruk").on("value",s=>{
-  tabData = s.val() || {};
-  renderAll();
-});
+db.ref("trees").on("value", s=>{ treesData = s.val() || {}; renderTreeTabs(); });
+db.ref("people").on("value", s=>{ peopleData = s.val() || {}; renderFamilyTree(); });
 
-db.ref("birthdays").on("value",s=>{
-  birthdayData = s.val() || {};
-  renderAll();
-});
-
-db.ref("announcements").on("value",s=>{
-  announcementData = s.val() || {};
-  renderAll();
-});
-db.ref("mowlidStatus").on("value",s=>{
-  statusData = s.val() || {};
-  renderAll();
-});
-  db.ref("trees").on("value",s=>{
-  treesData = s.val() || {};
-  renderTreeTabs();
-});
-
-db.ref("people").on("value",s=>{
-  peopleData = s.val() || {};
-  renderFamilyTree();
-});
 /* ===========================
    MAIN RENDER
 =========================== */
@@ -149,818 +147,577 @@ function renderAll(){
 
   let now = new Date();
 
-  /* ======================
-     📢 ANNOUNCEMENTS
-  ====================== */
+  renderAnnouncements(now);
+  renderMowlid(now);
+  renderTabarruk();
+  renderBirthdaysToday(now);
+  renderUpcomingBirthdays(now);
+  reorderSections();
+}
 
-  let annHTML = "";
+/* ======================
+   📢 ANNOUNCEMENTS
+====================== */
 
-  let foundAnnouncement = false;
+function renderAnnouncements(now){
 
-  for(let id in announcementData){
+  let html = "";
+  let found = false;
 
-    let a = announcementData[id];
+  let entries = Object.entries(announcementData)
+    .filter(([id,a])=> now >= new Date(a.from) && now <= new Date(a.to))
+    .sort((a,b)=> new Date(a[1].from) - new Date(b[1].from));
 
-    let from = new Date(a.from);
-    let to = new Date(a.to);
+  entries.forEach(([id,a])=>{
+    found = true;
+    html += `
+      <div class="card">
+        <h3>${escapeHtml(a.title)}</h3>
+        <div>${escapeHtml(a.text||"")}</div>
+        <br>
+        <small style="color:#64748b">
+          ${new Date(a.from).toDateString()} → ${new Date(a.to).toDateString()}
+        </small>
+      </div>
+    `;
+  });
 
-    if(now >= from && now <= to){
+  announcementSection.innerHTML = found ? html : `<div class="card empty">No Active Announcements</div>`;
+}
 
-      foundAnnouncement = true;
+/* ======================
+   🕌 MOWLID
+====================== */
 
-      annHTML += `
+function computeMowlidStatus(now){
 
-        <div class="card">
+  if(!mowlidData) return { active:false };
 
-          <h3>${a.title}</h3>
+  let start = new Date(mowlidData.start);
+  start.setHours(0,0,0,0);
 
-          <div>${a.text}</div>
+  let end = new Date(start);
+  end.setDate(end.getDate() + mowlidData.days - 1);
 
-          <br>
+  let diff = Math.floor((now - start) / (1000*60*60*24));
 
-          <small>
-            ${from.toDateString()}
-            →
-            ${to.toDateString()}
-          </small>
+  let dayIndex = -1;
+  let inRange = diff >= 0 && diff < mowlidData.days;
 
+  if(inRange) dayIndex = diff;
+  if(diff >= mowlidData.days) dayIndex = mowlidData.days - 1;
+
+  let status = "notstarted";
+
+  if(inRange){
+    let key = "day" + (dayIndex+1);
+    let raw = statusData[key];
+
+    if(raw){
+      if(raw.status === "completed"){
+        if(raw.completedAt && (Date.now() - raw.completedAt) < COMPLETED_REVERT_MS){
+          status = "completed";
+        } else {
+          status = "notstarted"; // auto-reverted after 6 hours
+        }
+      } else if(raw.status === "ongoing"){
+        status = "ongoing";
+      }
+    }
+  } else if(diff >= mowlidData.days){
+    status = "completed";
+  }
+
+  return { active:true, inRange, start, end, dayIndex, status };
+}
+
+function renderMowlid(now){
+
+  if(!mowlidData){
+    mowlidSection.innerHTML = `<div class="card empty">No Mowlid Scheduled</div>`;
+    todayIndex = -1;
+    mowlidIsActivePeriod = false;
+    return;
+  }
+
+  let info = computeMowlidStatus(now);
+
+  todayIndex = info.dayIndex;
+  mowlidIsActivePeriod = info.inRange;
+
+  let badgeClass = "badge-upcoming";
+  let label = "Not Started";
+
+  if(info.status === "ongoing"){ badgeClass = "badge-started"; label = "Ongoing"; }
+  else if(info.status === "completed"){ badgeClass = "badge-completed"; label = "Completed"; }
+
+  mowlidSection.innerHTML = `
+    <div class="mowlid-card ${info.inRange ? 'priority-glow' : ''}">
+      <div class="mowlid-left">
+        <h2>${escapeHtml(mowlidData.name)}</h2>
+        <div class="mowlid-day">
+          ${info.dayIndex >= 0 ? "Day " + (info.dayIndex+1) + " of " + mowlidData.days : "Not Started Yet"}
+        </div>
+        <div class="mowlid-dates">
+          ${info.start.toDateString()} → ${info.end.toDateString()}
+        </div>
+      </div>
+      <div class="mowlid-right">
+        <span class="badge ${badgeClass}">${label}</span>
+        ${info.inRange ? `<button class="edit-icon" onclick="openStatusPopup()" title="Update status">✏️</button>` : ""}
+      </div>
+    </div>
+  `;
+}
+
+function openStatusPopup(){
+  if(todayIndex < 0){
+    showBriefMessage("Mowlid isn't active today");
+    return;
+  }
+  statusPopup.style.display = "flex";
+}
+
+function closeStatusPopup(){
+  statusPopup.style.display = "none";
+}
+
+function setMowlidStatus(status){
+
+  if(todayIndex < 0) return;
+
+  let key = "day" + (todayIndex+1);
+
+  let payload = {
+    status: status,
+    completedAt: status === "completed" ? Date.now() : null,
+    updatedAt: Date.now()
+  };
+
+  db.ref("mowlidStatus/"+key).set(payload);
+
+  closeStatusPopup();
+}
+
+/* ======================
+   🍽️ TABARRUK
+====================== */
+
+function renderTabarruk(){
+
+  let dayIds = Object.keys(tabData).sort((a,b)=>{
+    return parseInt(a.replace("day","")) - parseInt(b.replace("day",""));
+  });
+
+  if(dayIds.length === 0){
+    tabarrukSection.innerHTML = `<div class="card empty">No Tabarruk Added</div>`;
+    return;
+  }
+
+  let start = mowlidData ? new Date(mowlidData.start) : null;
+
+  let rows = dayIds.map((key,i)=>{
+
+    let entry = tabData[key];
+    let dateLabel = "-";
+
+    if(start){
+      let d = new Date(start);
+      d.setDate(d.getDate() + i);
+      dateLabel = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    }
+
+    let cls = "";
+    if(i === todayIndex) cls = "today-row";
+    else if(todayIndex >= 0 && i < todayIndex) cls = "past-row";
+
+    return `
+      <tr class="${cls}">
+        <td>Day ${i+1}</td>
+        <td>${dateLabel}</td>
+        <td>${escapeHtml(entry.name || "-")}</td>
+        <td>${escapeHtml(entry.remarks || "-")}</td>
+      </tr>
+    `;
+  }).join("");
+
+  tabarrukSection.innerHTML = `
+    <table class="tab-table">
+      <thead>
+        <tr><th>Day</th><th>Date</th><th>Name</th><th>Remarks</th></tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+/* ======================
+   🎂 BIRTHDAYS (age calc fixed)
+====================== */
+
+function calcAge(dobStr){
+
+  let dob = new Date(dobStr);
+  let now = new Date();
+
+  let age = now.getFullYear() - dob.getFullYear();
+
+  let hadBirthdayThisYear =
+    (now.getMonth() > dob.getMonth()) ||
+    (now.getMonth() === dob.getMonth() && now.getDate() >= dob.getDate());
+
+  if(!hadBirthdayThisYear) age--;
+
+  return age;
+}
+
+function daysUntilBirthday(dobStr, now){
+
+  let dob = new Date(dobStr);
+
+  let next = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+  let nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if(next < nowMid) next.setFullYear(now.getFullYear()+1);
+
+  return Math.round((next - nowMid) / (1000*60*60*24));
+}
+
+function renderBirthdaysToday(now){
+
+  let html = "";
+  let has = false;
+
+  for(let id in birthdayData){
+
+    let b = birthdayData[id];
+    let dob = new Date(b.dob);
+
+    if(dob.getDate() === now.getDate() && dob.getMonth() === now.getMonth()){
+
+      has = true;
+
+      html += `
+        <div class="card" style="background:linear-gradient(135deg,#f59e0b,#f97316);color:white">
+          <div style="display:flex;align-items:center;gap:18px">
+            <div style="font-size:42px">🎂</div>
+            <div>
+              <h2 style="margin:0;font-size:26px">${escapeHtml(b.name)}</h2>
+              <div style="margin-top:6px;font-size:15px">Turns ${calcAge(b.dob)}</div>
+              <div style="margin-top:8px;opacity:0.92">✨ Happy Birthday! May Allah bless you</div>
+            </div>
+          </div>
         </div>
       `;
     }
   }
 
-  if(!foundAnnouncement){
-
-    annHTML = `
-      <div class="card empty">
-        No Active Announcements
-      </div>
-    `;
-  }
-
-  announcementSection.innerHTML = annHTML;
-
-  /* ======================
-     🕌 MOWLID
-  ====================== */
-
-  if(mowlidData){
-
-    let start = new Date(mowlidData.start);
-
-    let end = new Date(start);
-
-    end.setDate(end.getDate() + mowlidData.days - 1);
-
-    let diff = Math.floor(
-      (now - start) / (1000*60*60*24)
-    );
-
-    todayIndex = -1;
-
-    let status = "Upcoming";
-
-let badge = "badge-upcoming";
-
-if(diff >= 0 && diff < mowlidData.days){
-
-  todayIndex = diff;
-
-  let key = "day"+(todayIndex+1);
-
-  let s = statusData[key];
-
-  if(s){
-
-    if(s.status === "ongoing"){
-
-      status = "Ongoing";
-
-      badge = "badge-started";
-    }
-
-    else if(s.status === "completed"){
-
-      status = "Completed";
-
-      badge = "badge-completed";
-    }
-
-    else{
-
-      status = "Not Started";
-
-      badge = "badge-upcoming";
-    }
-
-  }else{
-
-    status = "Not Started";
-
-    badge = "badge-upcoming";
-  }
+  birthdaySection.innerHTML = has ? html : `<div class="card empty">No Birthdays Today</div>`;
 }
 
-if(diff >= mowlidData.days){
+function renderUpcomingBirthdays(now){
 
-  status = "Completed";
-
-  badge = "badge-completed";
-
-  todayIndex = mowlidData.days - 1;
-}
-
-    mowlidSection.innerHTML = `
-
-      <div class="card">
-
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-        ">
-
-          <div>
-
-            <h2>${mowlidData.name}</h2>
-
-            <small>
-              ${start.toDateString()}
-              →
-              ${end.toDateString()}
-            </small>
-
-            <br><br>
-
-            <b>
-              ${
-                todayIndex >= 0
-                ? "Day " + (todayIndex+1)
-                : "Not Started"
-              }
-            </b>
-
-          </div>
-
-          <div>
-
-            <span class="badge ${badge}">
-              ${status}
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-    `;
-  }
-  else{
-
-    mowlidSection.innerHTML = `
-      <div class="card empty">
-        No Mowlid Scheduled
-      </div>
-    `;
-  }
-
-  /* ======================
-     🍽️ TABARRUK
-  ====================== */
-
-  let tabHTML = `
-    <div class="grid">
-  `;
-
-  let i = 0;
-
-  for(let day in tabData){
-
-    let cls = "tab-box";
-
-    if(i === todayIndex){
-      cls += " today-box";
-    }
-
-    if(i < todayIndex){
-      cls += " completed-box";
-    }
-
-    tabHTML += `
-
-      <div class="${cls}">
-
-        <h3>Day ${i+1}</h3>
-
-        <div>
-          ${tabData[day].name || "-"}
-        </div>
-
-        <br>
-
-        <small>
-          ${tabData[day].remarks || ""}
-        </small>
-
-      </div>
-    `;
-
-    i++;
-  }
-
-  tabHTML += `</div>`;
-
-  if(i === 0){
-
-    tabHTML = `
-      <div class="card empty">
-        No Tabarruk Added
-      </div>
-    `;
-  }
-
-  tabarrukSection.innerHTML = tabHTML;
-
-  /* ======================
-     🎂 BIRTHDAYS
-  ====================== */
-
-  let birthdayHTML = "";
-
-  let hasBirthday = false;
+  let list = [];
 
   for(let id in birthdayData){
 
     let b = birthdayData[id];
+    let days = daysUntilBirthday(b.dob, now);
 
-    let dob = new Date(b.dob);
-
-    if(
-      dob.getDate() === now.getDate()
-      &&
-      dob.getMonth() === now.getMonth()
-    ){
-
-      hasBirthday = true;
-
-      let age =
-        now.getFullYear()
-        -
-        dob.getFullYear();
-
-     birthdayHTML += `
-
-<div class="card" style="
-  background:linear-gradient(
-    135deg,
-    #f59e0b,
-    #f97316
-  );
-  color:white;
-">
-
-  <div style="
-    display:flex;
-    align-items:center;
-    gap:18px;
-  ">
-
-    <div style="
-      font-size:42px;
-    ">
-      🎂
-    </div>
-
-    <div>
-
-      <h2 style="
-        margin:0;
-        font-size:28px;
-      ">
-        ${b.name}
-      </h2>
-
-      <div style="
-        margin-top:6px;
-        font-size:16px;
-      ">
-        Turns ${age}
-      </div>
-
-      <div style="
-        margin-top:10px;
-        opacity:0.92;
-      ">
-        ✨ Happy Birthday!
-        May Allah bless you
-      </div>
-
-    </div>
-
-  </div>
-
-</div>
-`;
+    if(days > 0){
+      list.push({ name:b.name, days });
     }
   }
 
-  if(!hasBirthday){
+  list.sort((a,b)=> a.days - b.days);
+  list = list.slice(0,5);
 
-    birthdayHTML = `
-      <div class="card empty">
-        No Birthdays Today
-      </div>
-    `;
+  if(list.length === 0){
+    upcomingBirthdaySection.innerHTML = `<div class="card empty">No upcoming birthdays</div>`;
+    return;
   }
 
-  birthdaySection.innerHTML = birthdayHTML;
+  upcomingBirthdaySection.innerHTML = `
+    <div class="upcoming-list">
+      ${list.map(item=>`
+        <div class="upcoming-row">
+          <span>${escapeHtml(item.name)}</span>
+          <span class="upcoming-when">
+            ${item.days === 1 ? "Tomorrow" : "In " + item.days + " days"}
+          </span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+/* ======================
+   PRIORITY REORDER
+   While Mowlid is in its active date range, Mowlid + Tabarruk
+   move to the top of the page, above Announcements.
+====================== */
+
+function reorderSections(){
+
+  let container = document.getElementById("mainContainer");
+  let secAnn = document.getElementById("sec-announcements");
+  let secMowlid = document.getElementById("sec-mowlid");
+  let secTabarruk = document.getElementById("sec-tabarruk");
+
+  if(mowlidIsActivePeriod){
+    container.insertBefore(secMowlid, container.firstChild);
+    container.insertBefore(secTabarruk, secMowlid.nextSibling);
+    container.insertBefore(secAnn, secTabarruk.nextSibling);
+  } else {
+    container.insertBefore(secAnn, container.firstChild);
+    container.insertBefore(secMowlid, secAnn.nextSibling);
+    container.insertBefore(secTabarruk, secMowlid.nextSibling);
+  }
 }
 
 /* ===========================
-   🎂 POPUP
+   🎂 BIRTHDAY POPUP (age fixed)
 =========================== */
 
 function openBirthdayPopup(){
 
   birthdayPopup.style.display = "flex";
 
-  let html = "";
+  let entries = Object.values(birthdayData)
+    .sort((a,b)=> a.name.localeCompare(b.name));
 
-  for(let id in birthdayData){
-
-    let b = birthdayData[id];
-
-    let dob = new Date(b.dob);
-
-    let age =
-      new Date().getFullYear()
-      -
-      dob.getFullYear();
-
-    html += `
-
-      <div class="card">
-
-        <b>${b.name}</b>
-
-        <br>
-
-        Turns ${age}
-
-      </div>
-    `;
-  }
-
-  birthdayPopupList.innerHTML = html;
+  birthdayPopupList.innerHTML = entries.map(b=>`
+    <div class="card">
+      <b>${escapeHtml(b.name)}</b>
+      <br>
+      Turns ${calcAge(b.dob)} this year
+    </div>
+  `).join("") || `<div class="empty">No birthdays yet</div>`;
 }
 
 function closeBirthdayPopup(){
-
   birthdayPopup.style.display = "none";
 }
+
+function showBriefMessage(msg){
+  alert(msg);
+}
+
 /* =========================
    🌳 PUBLIC TREE VIEW
 ========================= */
 
 function renderTreeTabs(){
 
-  let html = "";
+  let ids = Object.keys(treesData);
 
-  let first = null;
+  if(!activeTree && ids.length) activeTree = ids[0];
 
-  for(let id in treesData){
-
-    if(!first) first = id;
-
-    html += `
-      <div
-        class="
-          tree-tab
-          ${activeTree===id?'active':''}
-        "
-        onclick="switchTree('${id}')"
-      >
-        ${treesData[id].name}
-      </div>
-    `;
-  }
-
-  treeTabs.innerHTML = html;
-
-  if(!activeTree && first){
-
-    activeTree = first;
-
-    renderTreeTabs();
-
-    renderFamilyTree();
-  }
-}
-
-function switchTree(id){
-
-  activeTree = id;
-
-  renderTreeTabs();
+  treeTabs.innerHTML = ids.map(id=>`
+    <div class="tree-tab ${activeTree===id?'active':''}" onclick="switchTree('${id}')">
+      ${escapeHtml(treesData[id].name)}
+    </div>
+  `).join("");
 
   renderFamilyTree();
 }
 
+function switchTree(id){
+  activeTree = id;
+  renderTreeTabs();
+}
+
+function relationLabel(person){
+
+  let parts = [];
+
+  if(person.father && peopleData[person.father]){
+    let fatherGenderWord = "S/O"; // relative to this person, always "child of"
+    let word = person.gender === "female" ? "D/O" : "S/O";
+    parts.push(`${word} ${escapeHtml(peopleData[person.father].name)}`);
+  }
+
+  if(person.spouse && peopleData[person.spouse]){
+    parts.push(`Spouse: ${escapeHtml(peopleData[person.spouse].name)}`);
+  }
+
+  return parts.join("<br>");
+}
+
 function renderFamilyTree(){
- 
-  if(!activeTree) return;
+
+  if(!activeTree){
+    familyTreeContainer.innerHTML = `<div class="card empty">No family trees created yet</div>`;
+    return;
+  }
 
   let people = [];
 
   for(let id in peopleData){
-
     let p = peopleData[id];
+    if(p.trees && p.trees[activeTree]){
+      people.push({ id, ...p });
+    }
+  }
 
-    if(
-      p.trees &&
-      p.trees[activeTree]
-    ){
+  if(people.length === 0){
+    familyTreeContainer.innerHTML = `<div class="card empty">No people added to this tree yet</div>`;
+    return;
+  }
 
-      people.push({
-        id:id,
-        ...p
+  let roots = people.filter(p => !p.father || !peopleData[p.father] || !peopleData[p.father].trees || !peopleData[p.father].trees[activeTree]);
+
+  let generations = [];
+  let processed = new Set();
+  let expandedCouples = new Set();
+
+  function buildGeneration(nodes, level){
+
+    if(!generations[level]) generations[level] = [];
+
+    nodes.forEach(person=>{
+
+      if(processed.has(person.id)) return;
+      processed.add(person.id);
+
+      let spouse = null;
+      let minimalOnly = false;
+
+      if(person.spouse && peopleData[person.spouse]){
+
+        let s = peopleData[person.spouse];
+
+        if(s.trees && s.trees[activeTree]){
+
+          let pairKey = [person.id, person.spouse].sort().join("-");
+
+          if(expandedCouples.has(pairKey)){
+            minimalOnly = true;
+          } else {
+            spouse = { id: person.spouse, ...s };
+            expandedCouples.add(pairKey);
+            processed.add(spouse.id);
+          }
+        }
+      }
+
+      let children = people.filter(p => p.father === person.id);
+
+      generations[level].push({
+        mainPerson: person,
+        spouse,
+        minimalOnly,
+        children: minimalOnly ? [] : children
       });
-    }
+
+      if(children.length && !minimalOnly){
+        buildGeneration(children, level+1);
+      }
+    });
   }
 
-/* =========================
-   🌳 FAMILY UNIT GENERATION
-========================= */
-
-let roots = people.filter(
-  p => !p.father
-);
-
-let generations = [];
-
-let processed = new Set();
-let expandedCouples = new Set();
-
-function buildGeneration(nodes,level){
-
-  if(!generations[level]){
-    generations[level] = [];
-  }
-
-  nodes.forEach(person=>{
-
-    if(processed.has(person.id)) return;
-
-    processed.add(person.id);
-
-    let spouse = null;
-
-
-/* ======================
-   FIND SPOUSE
-====================== */
-
-let minimalOnly = false;
-
-if(
-  person.spouse &&
-  peopleData[person.spouse]
-){
-
-  let s = peopleData[person.spouse];
-
-  if(
-    s.trees &&
-    s.trees[activeTree]
-  ){
-
-    let pairKey =
-      [person.id,s.id]
-      .sort()
-      .join("-");
-
-    /* ======================
-       ALREADY EXPANDED?
-    ====================== */
-
-    if(
-      expandedCouples.has(pairKey)
-    ){
-
-      minimalOnly = true;
-    }
-
-    else{
-
-      spouse = {
-        id:person.spouse,
-        ...s
-      };
-
-      expandedCouples.add(
-        pairKey
-      );
-
-      processed.add(spouse.id);
-    }
-  }
-}
-
-    /* ======================
-       CREATE FAMILY UNIT
-    ====================== */
-
-let familyUnit = {
-
-  mainPerson:person,
-
-  spouse:spouse,
-
-  minimalOnly:minimalOnly,
-
-  children:[]
-};
-
-    /* ======================
-       FIND CHILDREN
-    ====================== */
-
-    let children = people.filter(
-      p => p.father === person.id
-    );
-
-    if(!minimalOnly){
-  familyUnit.children = children;
-}
-
-    generations[level].push(
-      familyUnit
-    );
-
-    /* ======================
-       NEXT GENERATION
-    ====================== */
-
-    if(children.length){
-
-      buildGeneration(
-        children,
-        level+1
-      );
-    }
-  });
-}
-
-buildGeneration(roots,0);
+  buildGeneration(roots, 0);
 
   let html = `
-  <div class="tree-wrapper">
-
-    <div class="tree-area">
-
-      <svg
-        class="tree-svg"
-        id="treeSVG"
-      ></svg>
-`;
+    <div class="tree-wrapper">
+      <div class="tree-area">
+        <svg class="tree-svg" id="treeSVG"></svg>
+  `;
 
   generations.forEach(gen=>{
 
-    html += `
-      <div class="generation">
-    `;
+    html += `<div class="generation">`;
 
-gen.forEach(unit=>{
+    gen.forEach(unit=>{
 
-  let person = unit.mainPerson;
+      let person = unit.mainPerson;
+      let spouse = unit.spouse;
+      let shared = person.trees && Object.keys(person.trees).length > 1;
 
-  let spouse = unit.spouse;
-
-  let shared =
-    person.trees &&
-    Object.keys(
-      person.trees
-    ).length > 1;
-
-  html += `
-
-  <div class="family-unit">
-
-    <!-- MAIN PERSON -->
-
-    <div
-      id="person-${person.id}"
-      class="
-        person-card
-        ${shared?'shared-person':''}
-      "
-    >
-
-      ${
-        shared
-        ?
-        `
-        <div class="shared-badge">
-          Shared
+      html += `
+        <div class="family-unit">
+          <div id="person-${person.id}" class="person-card ${shared ? 'shared-person' : ''} ${unit.minimalOnly ? 'minimal-card' : ''}">
+            ${shared ? `<div class="shared-badge">Shared</div>` : ""}
+            <div class="person-name">${escapeHtml(person.name)}</div>
+            <div class="person-meta">${relationLabel(person)}</div>
+            ${unit.minimalOnly ? `<div class="minimal-tag">Shown in full elsewhere</div>` : ""}
+          </div>
+          ${spouse ? `
+            <div class="spouse-link"></div>
+            <div id="person-${spouse.id}" class="person-card spouse-card">
+              <div class="person-name">${escapeHtml(spouse.name)}</div>
+              <div class="person-meta">${relationLabel(spouse)}</div>
+            </div>
+          ` : ""}
         </div>
-        `
-        :
-        ""
-      }
+      `;
+    });
 
-      <div class="person-name">
-        ${person.name}
-      </div>
-
-      <div class="person-meta">
-
-        ${
-          person.gender==="male"
-          ? "👨 Male"
-          : "👩 Female"
-        }
-
-      </div>
-
-    </div>
-
-    ${
-      spouse
-      ?
-      `
-
-      <!-- SPOUSE -->
-
-      <div class="spouse-link"></div>
-
-      <div
-        id="person-${spouse.id}"
-        class="person-card spouse-card"
-      >
-
-        <div class="person-name">
-          ${spouse.name}
-        </div>
-
-        <div class="person-meta">
-
-          ${
-            spouse.gender==="male"
-            ? "👨 Male"
-            : "👩 Female"
-          }
-
-        </div>
-
-      </div>
-
-      `
-      :
-      ""
-    }
-
-  </div>
-  `;
-});
-
-    html += `
-      </div>
-    `;
+    html += `</div>`;
   });
 
-html += `
-    </div>
-  </div>
-  `;
+  html += `</div></div>`;
 
   familyTreeContainer.innerHTML = html;
-  setTimeout(drawTreeLines,100);
-  
+
+  setTimeout(drawTreeLines, 100);
 }
-  
+
 function drawTreeLines(){
 
   let svg = document.getElementById("treeSVG");
-
   if(!svg) return;
 
   svg.innerHTML = "";
 
-  let svgRect =
-    svg.getBoundingClientRect();
+  let svgRect = svg.getBoundingClientRect();
 
-  /* ======================
-     LOOP FAMILY UNITS
-  ====================== */
+  document.querySelectorAll(".family-unit").forEach(unit=>{
 
-  let familyUnits =
-    document.querySelectorAll(
-      ".family-unit"
-    );
-
-  familyUnits.forEach(unit=>{
-
-    let cards =
-      unit.querySelectorAll(
-        ".person-card"
-      );
-
+    let cards = unit.querySelectorAll(".person-card");
     if(cards.length === 0) return;
 
-    /* ======================
-       FIND FAMILY CENTER
-    ====================== */
+    let firstRect = cards[0].getBoundingClientRect();
+    let lastRect = cards[cards.length-1].getBoundingClientRect();
 
-    let firstRect =
-      cards[0].getBoundingClientRect();
+    let centerX = (firstRect.left + lastRect.right) / 2 - svgRect.left;
+    let centerY = firstRect.bottom - svgRect.top;
 
-    let lastRect =
-      cards[
-        cards.length - 1
-      ].getBoundingClientRect();
-
-    let centerX =
-      (
-        firstRect.left +
-        lastRect.right
-      ) / 2
-      -
-      svgRect.left;
-
-    let centerY =
-      firstRect.bottom
-      -
-      svgRect.top;
-
-    /* ======================
-       FIND MAIN PERSON
-    ====================== */
-
-    let mainCard = cards[0];
-
-    let mainId =
-      mainCard.id.replace(
-        "person-",
-        ""
-      );
-
-    /* ======================
-       FIND CHILDREN
-    ====================== */
+    let mainId = cards[0].id.replace("person-","");
 
     for(let id in peopleData){
 
-      let child =
-        peopleData[id];
+      let child = peopleData[id];
+      if(child.father !== mainId) continue;
+      if(!child.trees || !child.trees[activeTree]) continue;
 
-      if(
-        child.father !== mainId
-      ) continue;
-
-      if(
-        !child.trees
-        ||
-        !child.trees[activeTree]
-      ) continue;
-
-      let childCard =
-        document.getElementById(
-          "person-"+id
-        );
-
+      let childCard = document.getElementById("person-"+id);
       if(!childCard) continue;
 
-      let childRect =
-        childCard.getBoundingClientRect();
-
-      let childX =
-        childRect.left +
-        childRect.width/2 -
-        svgRect.left;
-
-      let childY =
-        childRect.top -
-        svgRect.top;
-
-      let midY =
-        (centerY + childY)/2;
-
-      let path = `
-        M ${centerX} ${centerY}
-        V ${midY}
-        H ${childX}
-        V ${childY}
-      `;
+      let childRect = childCard.getBoundingClientRect();
+      let childX = childRect.left + childRect.width/2 - svgRect.left;
+      let childY = childRect.top - svgRect.top;
+      let midY = (centerY + childY) / 2;
 
       svg.innerHTML += `
-        <path
-          d="${path}"
-          class="connector-line"
-        />
+        <path d="M ${centerX} ${centerY} V ${midY} H ${childX} V ${childY}" class="connector-line"/>
       `;
     }
   });
 }
+
+/* ===========================
+   HELPERS
+=========================== */
+
+function escapeHtml(str){
+  if(str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
 </script>
 
 </body>
