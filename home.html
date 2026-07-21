@@ -32,6 +32,11 @@
     <div id="announcementSection"></div>
   </section>
 
+  <section id="sec-events">
+    <div class="section-title">🎉 Events &amp; Gatherings</div>
+    <div id="eventSection"></div>
+  </section>
+
   <section id="sec-mowlid">
     <div class="section-title">🕌 Mowlid</div>
     <div id="mowlidSection"></div>
@@ -117,6 +122,7 @@ let mowlidData = null;
 let tabData = {};
 let birthdayData = {};
 let announcementData = {};
+let eventData = {};
 let statusData = {};
 let todayIndex = -1;
 let mowlidIsActivePeriod = false;
@@ -134,6 +140,7 @@ db.ref("mowlid").on("value", s=>{ mowlidData = s.val(); renderAll(); });
 db.ref("tabarruk").on("value", s=>{ tabData = s.val() || {}; renderAll(); });
 db.ref("birthdays").on("value", s=>{ birthdayData = s.val() || {}; renderAll(); });
 db.ref("announcements").on("value", s=>{ announcementData = s.val() || {}; renderAll(); });
+db.ref("events").on("value", s=>{ eventData = s.val() || {}; renderAll(); });
 db.ref("mowlidStatus").on("value", s=>{ statusData = s.val() || {}; renderAll(); });
 
 db.ref("trees").on("value", s=>{ treesData = s.val() || {}; renderTreeTabs(); });
@@ -148,6 +155,7 @@ function renderAll(){
   let now = new Date();
 
   renderAnnouncements(now);
+  renderEvents(now);
   renderMowlid(now);
   renderTabarruk();
   renderBirthdaysToday(now);
@@ -186,6 +194,47 @@ function renderAnnouncements(now){
 }
 
 /* ======================
+   🎉 EVENTS & GATHERINGS
+   Only shows events whose date/time hasn't passed yet.
+====================== */
+
+function renderEvents(now){
+
+  let upcoming = Object.values(eventData)
+    .filter(e => new Date(e.dateTime) >= now)
+    .sort((a,b)=> new Date(a.dateTime) - new Date(b.dateTime));
+
+  if(upcoming.length === 0){
+    eventSection.innerHTML = `<div class="card empty">No Upcoming Events</div>`;
+    return;
+  }
+
+  eventSection.innerHTML = upcoming.map(e=>{
+
+    let dt = new Date(e.dateTime);
+    let month = dt.toLocaleDateString('en-GB', { month:'short' });
+    let time = dt.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' });
+
+    return `
+      <div class="event-card">
+        <div class="event-date-badge">
+          <div class="day">${dt.getDate()}</div>
+          <div class="month">${month}</div>
+        </div>
+        <div class="event-body">
+          <h3>${escapeHtml(e.name)}</h3>
+          <div class="event-meta">
+            🕐 ${time}${e.venue ? " &nbsp;·&nbsp; 📍 " + escapeHtml(e.venue) : ""}
+          </div>
+          ${e.organiser ? `<div class="event-meta">👤 Organised by ${escapeHtml(e.organiser)}</div>` : ""}
+          ${e.note ? `<div class="event-note">${escapeHtml(e.note)}</div>` : ""}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ======================
    🕌 MOWLID
 ====================== */
 
@@ -201,11 +250,9 @@ function computeMowlidStatus(now){
 
   let diff = Math.floor((now - start) / (1000*60*60*24));
 
-  let dayIndex = -1;
-  let inRange = diff >= 0 && diff < mowlidData.days;
-
-  if(inRange) dayIndex = diff;
-  if(diff >= mowlidData.days) dayIndex = mowlidData.days - 1;
+  let ended = diff >= mowlidData.days;
+  let inRange = diff >= 0 && !ended;
+  let dayIndex = inRange ? diff : -1;
 
   let status = "notstarted";
 
@@ -224,23 +271,36 @@ function computeMowlidStatus(now){
         status = "ongoing";
       }
     }
-  } else if(diff >= mowlidData.days){
-    status = "completed";
   }
 
-  return { active:true, inRange, start, end, dayIndex, status };
+  return { active:true, ended, inRange, start, end, dayIndex, status };
 }
 
 function renderMowlid(now){
 
+  todayIndex = -1;
+  mowlidIsActivePeriod = false;
+
   if(!mowlidData){
-    mowlidSection.innerHTML = `<div class="card empty">No Mowlid Scheduled</div>`;
-    todayIndex = -1;
-    mowlidIsActivePeriod = false;
+    mowlidSection.innerHTML = "";
+    document.getElementById("sec-mowlid").style.display = "none";
+    document.getElementById("sec-tabarruk").style.display = "none";
     return;
   }
 
   let info = computeMowlidStatus(now);
+
+  /* Once the whole schedule has ended, the Mowlid + Tabarruk
+     sections vanish from the public view entirely (per spec). */
+  if(info.ended){
+    mowlidSection.innerHTML = "";
+    document.getElementById("sec-mowlid").style.display = "none";
+    document.getElementById("sec-tabarruk").style.display = "none";
+    return;
+  }
+
+  document.getElementById("sec-mowlid").style.display = "";
+  document.getElementById("sec-tabarruk").style.display = "";
 
   todayIndex = info.dayIndex;
   mowlidIsActivePeriod = info.inRange;
@@ -250,6 +310,16 @@ function renderMowlid(now){
 
   if(info.status === "ongoing"){ badgeClass = "badge-started"; label = "Ongoing"; }
   else if(info.status === "completed"){ badgeClass = "badge-completed"; label = "Completed"; }
+
+  let organiserLine = "";
+
+  if(info.dayIndex >= 0){
+    let key = "day" + (info.dayIndex + 1);
+    let tabEntry = tabData[key];
+    if(tabEntry && tabEntry.name){
+      organiserLine = `<div class="mowlid-dates">🍽️ Today's Tabarruk: <b>${escapeHtml(tabEntry.name)}</b></div>`;
+    }
+  }
 
   mowlidSection.innerHTML = `
     <div class="mowlid-card ${info.inRange ? 'priority-glow' : ''}">
@@ -261,6 +331,7 @@ function renderMowlid(now){
         <div class="mowlid-dates">
           ${info.start.toDateString()} → ${info.end.toDateString()}
         </div>
+        ${organiserLine}
       </div>
       <div class="mowlid-right">
         <span class="badge ${badgeClass}">${label}</span>
@@ -327,9 +398,7 @@ function renderTabarruk(){
       dateLabel = d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
     }
 
-    let cls = "";
-    if(i === todayIndex) cls = "today-row";
-    else if(todayIndex >= 0 && i < todayIndex) cls = "past-row";
+    let cls = (i === todayIndex) ? "today-row" : "";
 
     return `
       <tr class="${cls}">
@@ -461,6 +530,7 @@ function reorderSections(){
 
   let container = document.getElementById("mainContainer");
   let secAnn = document.getElementById("sec-announcements");
+  let secEvents = document.getElementById("sec-events");
   let secMowlid = document.getElementById("sec-mowlid");
   let secTabarruk = document.getElementById("sec-tabarruk");
 
@@ -468,9 +538,11 @@ function reorderSections(){
     container.insertBefore(secMowlid, container.firstChild);
     container.insertBefore(secTabarruk, secMowlid.nextSibling);
     container.insertBefore(secAnn, secTabarruk.nextSibling);
+    container.insertBefore(secEvents, secAnn.nextSibling);
   } else {
     container.insertBefore(secAnn, container.firstChild);
-    container.insertBefore(secMowlid, secAnn.nextSibling);
+    container.insertBefore(secEvents, secAnn.nextSibling);
+    container.insertBefore(secMowlid, secEvents.nextSibling);
     container.insertBefore(secTabarruk, secMowlid.nextSibling);
   }
 }
