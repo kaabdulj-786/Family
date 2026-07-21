@@ -53,6 +53,124 @@ function showToast(text){
 }
 
 /* ===========================
+   🎉 EVENTS & GATHERINGS
+=========================== */
+
+let eventData = {};
+let editEventId = null;
+
+function addEvent(){
+
+  let name = evName.value.trim();
+  let dateTime = evDateTime.value;
+  let venue = evVenue.value.trim();
+  let organiser = evOrganiser.value.trim();
+  let note = evNote.value.trim();
+
+  if(!name || !dateTime){
+    showToast("Please enter event name and date/time");
+    return;
+  }
+
+  let id = editEventId || Date.now();
+
+  db.ref("events/"+id).set({ name, dateTime, venue, organiser, note });
+
+  evName.value = "";
+  evDateTime.value = "";
+  evVenue.value = "";
+  evOrganiser.value = "";
+  evNote.value = "";
+
+  editEventId = null;
+  evCancelBtn.style.display = "none";
+
+  showToast("Event Saved");
+}
+
+function cancelEventEdit(){
+  editEventId = null;
+  evName.value = "";
+  evDateTime.value = "";
+  evVenue.value = "";
+  evOrganiser.value = "";
+  evNote.value = "";
+  evCancelBtn.style.display = "none";
+}
+
+db.ref("events").on("value", snap=>{
+  eventData = snap.val() || {};
+  renderEventLists();
+});
+
+function renderEventLists(){
+
+  let now = new Date();
+
+  let upcoming = [];
+  let past = [];
+
+  Object.entries(eventData).forEach(([id,e])=>{
+    if(new Date(e.dateTime) >= now){
+      upcoming.push([id,e]);
+    } else {
+      past.push([id,e]);
+    }
+  });
+
+  upcoming.sort((a,b)=> new Date(a[1].dateTime) - new Date(b[1].dateTime));
+  past.sort((a,b)=> new Date(b[1].dateTime) - new Date(a[1].dateTime));
+
+  upcomingEventList.innerHTML = upcoming.map(([id,e])=> eventCardHtml(id,e,false)).join("")
+    || `<div class="card empty">No upcoming events</div>`;
+
+  pastEventList.innerHTML = past.map(([id,e])=> eventCardHtml(id,e,true)).join("")
+    || `<div class="card empty">No past events yet</div>`;
+}
+
+function eventCardHtml(id, e, isPast){
+
+  let dt = new Date(e.dateTime);
+
+  return `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:10px">
+        <b>${escapeHtml(e.name)}</b>
+        <span class="badge ${isPast ? 'badge-expired' : 'badge-started'}">${isPast ? 'Past' : 'Upcoming'}</span>
+      </div>
+      <small style="color:#64748b;display:block;margin-top:6px">
+        ${formatDateTimeClean(dt)}${e.venue ? " · " + escapeHtml(e.venue) : ""}
+      </small>
+      ${e.organiser ? `<div style="margin-top:8px">👤 Organised by ${escapeHtml(e.organiser)}</div>` : ""}
+      ${e.note ? `<div style="margin-top:8px;color:#64748b">${escapeHtml(e.note)}</div>` : ""}
+      <div class="btn-row">
+        <button class="primary-btn" onclick="editEvent('${id}')">Edit</button>
+        <button class="danger-btn" onclick="deleteEvent('${id}')">Delete</button>
+      </div>
+    </div>
+  `;
+}
+
+function editEvent(id){
+  let e = eventData[id];
+  if(!e) return;
+  editEventId = id;
+  evName.value = e.name;
+  evDateTime.value = e.dateTime;
+  evVenue.value = e.venue || "";
+  evOrganiser.value = e.organiser || "";
+  evNote.value = e.note || "";
+  evCancelBtn.style.display = "inline-block";
+  showSection('events', document.querySelector('.sidebar button[data-target="events"]'));
+}
+
+function deleteEvent(id){
+  if(!confirm("Delete this event permanently?")) return;
+  db.ref("events/"+id).remove();
+  showToast("Event Deleted");
+}
+
+/* ===========================
    🕌 MOWLID
 =========================== */
 
