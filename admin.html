@@ -18,6 +18,7 @@
 
   <h2>Family Admin</h2>
 
+  <button data-target="events" onclick="showSection('events',this)">🎉 <span class="label">Events</span></button>
   <button data-target="mowlid" onclick="showSection('mowlid',this)">🕌 <span class="label">Mowlid</span></button>
   <button data-target="tabarruk" onclick="showSection('tabarruk',this)">🍽️ <span class="label">Tabarruk</span></button>
   <button data-target="birthdays" onclick="showSection('birthdays',this)">🎂 <span class="label">Birthdays</span></button>
@@ -29,6 +30,45 @@
 </div>
 
 <div class="main">
+
+  <!-- EVENTS & GATHERINGS -->
+  <div id="events" class="section">
+
+    <div class="card">
+      <h2>🎉 Events &amp; Gatherings</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        For one-day events. Once the date/time passes, it automatically
+        disappears from the public site and moves to History below.
+      </p>
+
+      <label class="field-label">Event Name</label>
+      <input id="evName" placeholder="e.g. Eid Gathering">
+
+      <label class="field-label">Date &amp; Time</label>
+      <input id="evDateTime" type="datetime-local">
+
+      <label class="field-label">Venue</label>
+      <input id="evVenue" placeholder="e.g. Community Hall">
+
+      <label class="field-label">Organiser (optional)</label>
+      <input id="evOrganiser" placeholder="e.g. Ahmed Kathiri">
+
+      <label class="field-label">Note (optional)</label>
+      <textarea id="evNote" placeholder="Any extra details for the family"></textarea>
+
+      <div class="btn-row">
+        <button class="primary-btn" onclick="addEvent()">Save Event</button>
+        <button class="secondary-btn" id="evCancelBtn" style="display:none" onclick="cancelEventEdit()">Cancel Edit</button>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom:10px">📅 Upcoming</h3>
+    <div id="upcomingEventList"></div>
+
+    <h3 style="margin:24px 0 10px;color:#64748b">🗄️ History</h3>
+    <div id="pastEventList"></div>
+
+  </div>
 
   <!-- MOWLID -->
   <div id="mowlid" class="section">
