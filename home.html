@@ -76,17 +76,9 @@
 <!-- MOWLID STATUS EDIT POPUP -->
 <div id="statusPopup" class="popup">
   <div class="popup-box">
-    <h2>Update Today's Status</h2>
-    <p style="color:#64748b;font-size:13px;margin-top:-10px">
-      Anyone in the family can update this — no admin needed.
-    </p>
-    <div class="btn-row" style="flex-direction:column">
-      <button class="secondary-btn" style="width:100%" onclick="setMowlidStatus('notstarted')">⬜ Not Started</button>
-      <button class="primary-btn" style="width:100%" onclick="setMowlidStatus('ongoing')">▶️ Started / Ongoing</button>
-      <button class="primary-btn" style="width:100%;background:#166534" onclick="setMowlidStatus('completed')">✅ Completed</button>
-    </div>
+    <div id="statusPopupBody"></div>
     <br>
-    <button class="secondary-btn" style="width:100%" onclick="closeStatusPopup()">Cancel</button>
+    <button class="secondary-btn" style="width:100%" onclick="closeStatusPopup()">Close</button>
   </div>
 </div>
 
@@ -342,11 +334,65 @@ function renderMowlid(now){
 }
 
 function openStatusPopup(){
+
   if(todayIndex < 0){
     showBriefMessage("Mowlid isn't active today");
     return;
   }
+
+  let now = new Date();
+  let info = computeMowlidStatus(now);
+  let body = document.getElementById("statusPopupBody");
+
+  if(info.status === "notstarted"){
+
+    body.innerHTML = `
+      <h2>Start Today's Mowlid?</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-10px">
+        Anyone in the family can do this — no admin needed.
+      </p>
+      <button class="primary-btn" style="width:100%" onclick="setMowlidStatus('ongoing')">
+        ▶️ Mark as Started
+      </button>
+    `;
+
+  } else if(info.status === "ongoing"){
+
+    body.innerHTML = `
+      <h2>Currently: Started / Ongoing</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-10px">
+        Once finished for today, mark it complete below.
+      </p>
+      <label class="field-label">Choose an action</label>
+      <select id="statusActionSelect" onchange="handleStatusAction(this.value)">
+        <option value="">-- Select --</option>
+        <option value="completed">✅ Mark as Completed</option>
+      </select>
+    `;
+
+  } else if(info.status === "completed"){
+
+    let key = "day" + (todayIndex+1);
+    let raw = statusData[key];
+    let remainingMs = COMPLETED_REVERT_MS - (Date.now() - (raw ? raw.completedAt : 0));
+    let hrs = Math.max(0, Math.floor(remainingMs / (1000*60*60)));
+    let mins = Math.max(0, Math.floor((remainingMs % (1000*60*60)) / (1000*60)));
+
+    body.innerHTML = `
+      <h2>✅ Completed</h2>
+      <p style="color:#64748b;font-size:13px">
+        This will automatically reset to Not Started in
+        <b>${hrs}h ${mins}m</b>. No action needed.
+      </p>
+    `;
+  }
+
   statusPopup.style.display = "flex";
+}
+
+function handleStatusAction(value){
+  if(!value) return;
+  setMowlidStatus(value);
 }
 
 function closeStatusPopup(){
