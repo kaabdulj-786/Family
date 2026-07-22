@@ -650,9 +650,12 @@ function relationLabel(person){
   let parts = [];
 
   if(person.father && peopleData[person.father]){
-    let fatherGenderWord = "S/O"; // relative to this person, always "child of"
     let word = person.gender === "female" ? "D/O" : "S/O";
     parts.push(`${word} ${escapeHtml(peopleData[person.father].name)}`);
+  }
+
+  if(person.mother && peopleData[person.mother]){
+    parts.push(`Mother: ${escapeHtml(peopleData[person.mother].name)}`);
   }
 
   if(person.spouse && peopleData[person.spouse]){
@@ -660,6 +663,15 @@ function relationLabel(person){
   }
 
   return parts.join("<br>");
+}
+
+function sortByOrder(list){
+  return list.slice().sort((a,b)=>{
+    let ao = (a.order===null||a.order===undefined) ? Infinity : a.order;
+    let bo = (b.order===null||b.order===undefined) ? Infinity : b.order;
+    if(ao !== bo) return ao - bo;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 function renderFamilyTree(){
@@ -683,7 +695,7 @@ function renderFamilyTree(){
     return;
   }
 
-  let roots = people.filter(p => !p.father || !peopleData[p.father] || !peopleData[p.father].trees || !peopleData[p.father].trees[activeTree]);
+  let roots = sortByOrder(people.filter(p => !p.father || !peopleData[p.father] || !peopleData[p.father].trees || !peopleData[p.father].trees[activeTree]));
 
   let generations = [];
   let processed = new Set();
@@ -719,7 +731,7 @@ function renderFamilyTree(){
         }
       }
 
-      let children = people.filter(p => p.father === person.id);
+      let children = sortByOrder(people.filter(p => p.father === person.id));
 
       generations[level].push({
         mainPerson: person,
@@ -752,9 +764,14 @@ function renderFamilyTree(){
       let spouse = unit.spouse;
       let shared = person.trees && Object.keys(person.trees).length > 1;
 
+      /* If this exact person somehow renders twice (edge case: duplicate
+         couple reconvergence), give the minimal card its own DOM id so it
+         never collides with the full card's id elsewhere on the page. */
+      let mainCardId = unit.minimalOnly ? `person-${person.id}-dup` : `person-${person.id}`;
+
       html += `
         <div class="family-unit">
-          <div id="person-${person.id}" class="person-card ${shared ? 'shared-person' : ''} ${unit.minimalOnly ? 'minimal-card' : ''}">
+          <div id="${mainCardId}" class="person-card ${shared ? 'shared-person' : ''} ${unit.minimalOnly ? 'minimal-card' : ''}">
             ${shared ? `<div class="shared-badge">Shared</div>` : ""}
             <div class="person-name">${escapeHtml(person.name)}</div>
             <div class="person-meta">${relationLabel(person)}</div>
@@ -778,10 +795,10 @@ function renderFamilyTree(){
 
   familyTreeContainer.innerHTML = html;
 
-  setTimeout(drawTreeLines, 100);
+  setTimeout(()=>drawTreeLines(people), 100);
 }
 
-function drawTreeLines(){
+function drawTreeLines(people){
 
   let svg = document.getElementById("treeSVG");
   if(!svg) return;
@@ -790,7 +807,7 @@ function drawTreeLines(){
 
   let svgRect = svg.getBoundingClientRect();
 
-  document.querySelectorAll(".family-unit").forEach(unit=>{
+  document.querySelectorAll("#familyTreeContainer .family-unit").forEach(unit=>{
 
     let cards = unit.querySelectorAll(".person-card");
     if(cards.length === 0) return;
@@ -801,16 +818,14 @@ function drawTreeLines(){
     let centerX = (firstRect.left + lastRect.right) / 2 - svgRect.left;
     let centerY = firstRect.bottom - svgRect.top;
 
-    let mainId = cards[0].id.replace("person-","");
+    let mainId = cards[0].id.replace("-dup","").replace("person-","");
 
-    for(let id in peopleData){
+    (people || []).forEach(child=>{
 
-      let child = peopleData[id];
-      if(child.father !== mainId) continue;
-      if(!child.trees || !child.trees[activeTree]) continue;
+      if(child.father !== mainId) return;
 
-      let childCard = document.getElementById("person-"+id);
-      if(!childCard) continue;
+      let childCard = document.getElementById("person-"+child.id) || document.getElementById("person-"+child.id+"-dup");
+      if(!childCard) return;
 
       let childRect = childCard.getBoundingClientRect();
       let childX = childRect.left + childRect.width/2 - svgRect.left;
@@ -820,9 +835,18 @@ function drawTreeLines(){
       svg.innerHTML += `
         <path d="M ${centerX} ${centerY} V ${midY} H ${childX} V ${childY}" class="connector-line"/>
       `;
-    }
+    });
   });
 }
+
+/* Redraw connector lines on resize/rotation instead of leaving them stale */
+let treeResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(treeResizeTimer);
+  treeResizeTimer = setTimeout(()=>{
+    if(activeTree) renderFamilyTree();
+  }, 200);
+});
 
 /* ===========================
    HELPERS
