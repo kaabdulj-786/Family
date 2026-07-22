@@ -187,9 +187,10 @@
     </div>
 
     <div class="card">
-      <h2>👤 Add New Person</h2>
+      <h2>👤 <span id="personFormTitle">Add New Person</span></h2>
       <p style="color:#64748b;font-size:13px;margin-top:-8px">
-        Creates a brand new person in the currently selected tree.
+        Father/Mother must already be in this tree. Spouse can be picked from
+        any tree — that's how a married-in person stays linked to their own family too.
       </p>
 
       <label class="field-label">Name</label>
@@ -201,17 +202,28 @@
         <option value="female">Female</option>
       </select>
 
-      <label class="field-label">Father</label>
+      <label class="field-label">Father (in this tree)</label>
       <select id="pFather">
         <option value="">No Father (Root Person)</option>
       </select>
 
-      <label class="field-label">Spouse</label>
+      <label class="field-label">Mother (in this tree, optional)</label>
+      <select id="pMother">
+        <option value="">No Mother Linked</option>
+      </select>
+
+      <label class="field-label">Spouse (any tree)</label>
       <select id="pSpouse">
         <option value="">No Spouse</option>
       </select>
 
-      <button class="primary-btn" onclick="addPerson()">Save Person</button>
+      <label class="field-label">Birth Order (among siblings, e.g. 1 = eldest)</label>
+      <input id="pOrder" type="number" min="1" placeholder="Leave blank to add at the end">
+
+      <div class="btn-row">
+        <button class="primary-btn" onclick="savePerson()">Save Person</button>
+        <button class="secondary-btn" id="pCancelBtn" style="display:none" onclick="cancelPersonEdit()">Cancel Edit</button>
+      </div>
     </div>
 
     <div class="card">
@@ -230,7 +242,16 @@
     </div>
 
     <div class="card">
+      <h2>🌳 Live Preview</h2>
+      <p style="color:#64748b;font-size:13px;margin-top:-8px">
+        This is exactly what the family will see for this tree.
+      </p>
+      <div id="adminTreePreview"></div>
+    </div>
+
+    <div class="card">
       <h2>📋 Tree Members</h2>
+      <input id="pSearch" placeholder="🔍 Search this tree's people..." oninput="renderPeopleUI()">
       <div id="peopleList"></div>
     </div>
 
