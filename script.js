@@ -530,6 +530,86 @@ function createTree(){
   showToast("Tree Created");
 }
 
+/* RENAME — only changes the label, people/relationships are untouched */
+function renameTree(){
+
+  if(!currentTree || !treesData[currentTree]){
+    showToast("Select a tree first");
+    return;
+  }
+
+  let newName = prompt("Rename tree:", treesData[currentTree].name);
+
+  if(newName === null) return; // cancelled
+
+  newName = newName.trim();
+
+  if(!newName){
+    showToast("Name can't be empty");
+    return;
+  }
+
+  db.ref("trees/"+currentTree+"/name").set(newName);
+
+  showToast("Tree Renamed");
+}
+
+/* DELETE — removes the tree, unlinks every person from it, and only
+   deletes a person outright if this was their ONLY tree. Anyone who
+   also belongs to another tree simply loses membership in this one. */
+function deleteTree(){
+
+  if(!currentTree || !treesData[currentTree]){
+    showToast("Select a tree first");
+    return;
+  }
+
+  let treeLabel = treesData[currentTree].name;
+
+  let affected = Object.entries(peopleData).filter(([id,p]) => p.trees && p.trees[currentTree]);
+
+  let onlyHere = affected.filter(([id,p]) => Object.keys(p.trees).length <= 1);
+
+  let confirmMsg = `Delete "${treeLabel}"?\n\n` +
+    `${affected.length} people are in this tree.\n` +
+    (onlyHere.length
+      ? `${onlyHere.length} of them are ONLY in this tree and will be permanently deleted.\n`
+      : "") +
+    `This cannot be undone. Continue?`;
+
+  if(!confirm(confirmMsg)) return;
+
+  let updates = {};
+
+  let deletedIds = new Set(onlyHere.map(([id])=>id));
+
+  affected.forEach(([id,p])=>{
+
+    if(deletedIds.has(id)){
+      updates["people/"+id] = null; // delete person entirely
+
+      /* Only clear the spouse's reciprocal link if that spouse ISN'T
+         also being fully deleted in this same batch — writing both
+         "people/X" (delete) and "people/X/spouse" (leaf) together is
+         an invalid overlapping Firebase path and would silently fail
+         the whole update, same bug class as the person-save issue. */
+      if(p.spouse && !deletedIds.has(p.spouse) &&
+         peopleData[p.spouse] && peopleData[p.spouse].spouse === id){
+        updates["people/"+p.spouse+"/spouse"] = null;
+      }
+    } else {
+      updates["people/"+id+"/trees/"+currentTree] = null;
+    }
+  });
+
+  updates["trees/"+currentTree] = null;
+
+  db.ref().update(updates).then(()=>{
+    currentTree = null;
+    showToast("Tree Deleted");
+  });
+}
+
 /* LOAD TREES — single subscription */
 db.ref("trees").on("value", snap=>{
 
@@ -617,10 +697,16 @@ function savePerson(){
     updates["people/"+id+"/father"] = father;
     updates["people/"+id+"/mother"] = mother;
     updates["people/"+id+"/order"] = order;
+    updates["people/"+id+"/spouse"] = newSpouse;
   } else {
+    /* IMPORTANT: spouse must be included in this single object write.
+       Writing "people/id" (the whole record) and "people/id/spouse"
+       (a piece of that same record) in the same update() call is an
+       invalid overlapping path in Firebase and silently fails the
+       entire save — this was the bug that stopped people from saving. */
     updates["people/"+id] = {
       name, gender, father, mother, order,
-      spouse: null,
+      spouse: newSpouse,
       trees: { [currentTree]: true }
     };
   }
@@ -629,8 +715,6 @@ function savePerson(){
   if(oldSpouse && oldSpouse !== newSpouse && peopleData[oldSpouse] && peopleData[oldSpouse].spouse === id){
     updates["people/"+oldSpouse+"/spouse"] = null;
   }
-
-  updates["people/"+id+"/spouse"] = newSpouse;
 
   if(newSpouse){
     updates["people/"+newSpouse+"/spouse"] = id;
