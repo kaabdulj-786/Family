@@ -498,14 +498,18 @@ function deleteAnnouncement(id){
 }
 
 /* ===========================
-   🌳 FAMILY TREE ENGINE
-   (fixes duplicate-listener bug: people + trees are each
-   subscribed exactly ONCE, not re-subscribed on every switch)
+   🌳 FAMILY TREE ENGINE (v2)
+   - father + mother (was father-only)
+   - spouse links are now reciprocal & validated (was one-directional)
+   - birth order field, used for sibling sequencing
+   - full edit support (was add/delete only)
+   - live preview rendered right here in admin
 =========================== */
 
 let currentTree = null;
 let treesData = {};
 let peopleData = {};
+let editPersonId = null;
 
 /* CREATE TREE */
 function createTree(){
@@ -551,6 +555,7 @@ db.ref("trees").on("value", snap=>{
 /* TREE SWITCH — just changes which tree we render, no new listener */
 treeSelect.onchange = ()=>{
   currentTree = treeSelect.value;
+  cancelPersonEdit();
   renderPeopleUI();
 };
 
@@ -564,8 +569,16 @@ function resolveName(id){
   return peopleData[id] ? peopleData[id].name : null;
 }
 
-/* ADD NEW PERSON */
-function addPerson(){
+function treeNamesFor(person){
+  if(!person.trees) return "";
+  return Object.keys(person.trees).map(tid => treesData[tid] ? treesData[tid].name : "").filter(Boolean).join(", ");
+}
+
+/* ===========================
+   ADD / EDIT PERSON (unified)
+=========================== */
+
+function savePerson(){
 
   if(!currentTree){
     showToast("Create or select a tree first");
@@ -579,27 +592,97 @@ function addPerson(){
     return;
   }
 
-  let id = "person_" + Date.now();
+  let gender = pGender.value;
+  let father = pFather.value || null;
+  let mother = pMother.value || null;
+  let newSpouse = pSpouse.value || null;
+  let order = pOrder.value ? parseInt(pOrder.value) : null;
 
-  let person = {
-    name,
-    gender: pGender.value,
-    father: pFather.value || null,
-    spouse: pSpouse.value || null,
-    trees: { [currentTree]: true }
-  };
+  /* Validate: block linking a spouse who is already married to someone else */
+  if(newSpouse && peopleData[newSpouse] && peopleData[newSpouse].spouse &&
+     peopleData[newSpouse].spouse !== editPersonId){
+    showToast(peopleData[newSpouse].name + " is already linked to a spouse");
+    return;
+  }
 
-  db.ref("people/"+id).set(person);
+  let isEdit = !!editPersonId;
+  let id = isEdit ? editPersonId : ("person_" + Date.now());
+  let oldSpouse = isEdit && peopleData[id] ? peopleData[id].spouse : null;
 
-  pName.value = "";
-  pFather.value = "";
-  pSpouse.value = "";
-  pGender.value = "male";
+  let updates = {};
 
-  showToast("Person Added");
+  if(isEdit){
+    updates["people/"+id+"/name"] = name;
+    updates["people/"+id+"/gender"] = gender;
+    updates["people/"+id+"/father"] = father;
+    updates["people/"+id+"/mother"] = mother;
+    updates["people/"+id+"/order"] = order;
+  } else {
+    updates["people/"+id] = {
+      name, gender, father, mother, order,
+      spouse: null,
+      trees: { [currentTree]: true }
+    };
+  }
+
+  /* Reciprocal spouse handling */
+  if(oldSpouse && oldSpouse !== newSpouse && peopleData[oldSpouse] && peopleData[oldSpouse].spouse === id){
+    updates["people/"+oldSpouse+"/spouse"] = null;
+  }
+
+  updates["people/"+id+"/spouse"] = newSpouse;
+
+  if(newSpouse){
+    updates["people/"+newSpouse+"/spouse"] = id;
+  }
+
+  db.ref().update(updates).then(()=>{
+    showToast(isEdit ? "Person Updated" : "Person Added");
+  });
+
+  cancelPersonEdit();
 }
 
-/* LINK EXISTING PERSON INTO CURRENT TREE (fixes the missing cross-tree feature) */
+function editPerson(id){
+
+  let p = peopleData[id];
+  if(!p) return;
+
+  editPersonId = id;
+
+  pName.value = p.name;
+  pGender.value = p.gender;
+  pFather.value = p.father || "";
+  pMother.value = p.mother || "";
+  pSpouse.value = p.spouse || "";
+  pOrder.value = p.order || "";
+
+  personFormTitle.innerText = "Edit " + p.name;
+  pCancelBtn.style.display = "inline-block";
+
+  renderPeopleUI(); // refresh dropdowns to exclude self, keep current values
+
+  pFather.value = p.father || "";
+  pMother.value = p.mother || "";
+  pSpouse.value = p.spouse || "";
+
+  showSection('tree', document.querySelector('.sidebar button[data-target="tree"]'));
+  document.getElementById('personFormTitle').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function cancelPersonEdit(){
+  editPersonId = null;
+  pName.value = "";
+  pFather.value = "";
+  pMother.value = "";
+  pSpouse.value = "";
+  pOrder.value = "";
+  pGender.value = "male";
+  personFormTitle.innerText = "Add New Person";
+  pCancelBtn.style.display = "none";
+}
+
+/* LINK EXISTING PERSON INTO CURRENT TREE */
 function linkExistingPerson(){
 
   if(!currentTree){
@@ -621,16 +704,22 @@ function linkExistingPerson(){
   showToast("Person added to this tree");
 }
 
-/* RENDER EVERYTHING TREE-RELATED FROM CACHED DATA */
+/* ===========================
+   RENDER: dropdowns + member list + live preview
+=========================== */
+
 function renderPeopleUI(){
 
-  peopleList.innerHTML = "";
-
   pFather.innerHTML = `<option value="">No Father (Root Person)</option>`;
+  pMother.innerHTML = `<option value="">No Mother Linked</option>`;
   pSpouse.innerHTML = `<option value="">No Spouse</option>`;
   existingPersonSelect.innerHTML = `<option value="">Select a person...</option>`;
 
-  if(!currentTree) return;
+  if(!currentTree){
+    peopleList.innerHTML = `<div class="empty">Create a tree first</div>`;
+    adminTreePreview.innerHTML = "";
+    return;
+  }
 
   let inTree = [];
   let notInTree = [];
@@ -644,38 +733,59 @@ function renderPeopleUI(){
     }
   }
 
-  /* dropdowns only offer people already in this tree, for father/spouse */
-  inTree.forEach(p=>{
-    pFather.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
-    pSpouse.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
+  /* Father / Mother: people in this tree, excluding the person being edited */
+  inTree.filter(p=>p.id!==editPersonId).forEach(p=>{
+    let target = p.gender === "female" ? pMother : pFather;
+    target.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
+  });
+  /* Spouse: ANYONE globally, excluding self, excluding people already married to someone else */
+  Object.entries(peopleData).forEach(([id,p])=>{
+    if(id === editPersonId) return;
+    if(p.spouse && p.spouse !== editPersonId) return; // already taken
+    let label = p.name + (treeNamesFor(p) ? " (" + treeNamesFor(p) + ")" : "");
+    pSpouse.innerHTML += `<option value="${id}">${escapeHtml(label)}</option>`;
   });
 
   /* existing-person linker offers everyone NOT already in this tree */
   notInTree.forEach(p=>{
-    existingPersonSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)}</option>`;
+    existingPersonSelect.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(treeNamesFor(p))})</option>`;
   });
 
-  if(inTree.length === 0){
-    peopleList.innerHTML = `<div class="empty">No people in this tree yet</div>`;
+  renderPeopleList(inTree);
+  renderAdminTreePreview(inTree);
+}
+
+function renderPeopleList(inTree){
+
+  let query = (pSearch ? pSearch.value : "").toLowerCase().trim();
+
+  let filtered = inTree
+    .filter(p => !query || p.name.toLowerCase().includes(query))
+    .sort((a,b)=> a.name.localeCompare(b.name));
+
+  if(filtered.length === 0){
+    peopleList.innerHTML = `<div class="empty">No people found</div>`;
     return;
   }
 
-  inTree.forEach(p=>{
+  peopleList.innerHTML = filtered.map(p=>{
 
     let treeCount = p.trees ? Object.keys(p.trees).length : 1;
 
-    peopleList.innerHTML += `
+    return `
       <div class="card">
-        <h3>${escapeHtml(p.name)} <small style="color:#94a3b8;font-weight:400">(${p.gender})</small></h3>
+        <h3>${escapeHtml(p.name)} <small style="color:#94a3b8;font-weight:400">(${p.gender}${p.order ? ", order " + p.order : ""})</small></h3>
         <div>Father: ${p.father ? escapeHtml(resolveName(p.father) || "—") : "No Father"}</div>
+        <div>Mother: ${p.mother ? escapeHtml(resolveName(p.mother) || "—") : "No Mother"}</div>
         <div>Spouse: ${p.spouse ? escapeHtml(resolveName(p.spouse) || "—") : "No Spouse"}</div>
         ${treeCount > 1 ? `<span class="badge badge-upcoming" style="margin-top:8px">In ${treeCount} trees</span>` : ""}
         <div class="btn-row">
+          <button class="primary-btn" onclick="editPerson('${p.id}')">Edit</button>
           <button class="danger-btn" onclick="removeFromTree('${p.id}')">Remove from Tree</button>
         </div>
       </div>
     `;
-  });
+  }).join("");
 }
 
 /* REMOVE FROM TREE — only deletes the person entirely if this was their last tree */
@@ -689,6 +799,9 @@ function removeFromTree(id){
   if(treeIds.length <= 1){
     if(!confirm(`${p.name} will be permanently deleted (this is their only tree). Continue?`)) return;
     db.ref("people/"+id).remove();
+    if(p.spouse && peopleData[p.spouse] && peopleData[p.spouse].spouse === id){
+      db.ref("people/"+p.spouse+"/spouse").remove();
+    }
     showToast("Person Deleted");
   } else {
     if(!confirm(`Remove ${p.name} from this tree only? They will remain in their other tree(s).`)) return;
@@ -696,6 +809,185 @@ function removeFromTree(id){
     showToast("Removed from this tree");
   }
 }
+
+/* ===========================
+   🌳 LIVE PREVIEW RENDERER
+   (mirrors the public tree logic, so what you see here is
+   exactly what the family sees on the public site)
+=========================== */
+
+function relationLabelAdmin(person){
+
+  let parts = [];
+
+  if(person.father && peopleData[person.father]){
+    let word = person.gender === "female" ? "D/O" : "S/O";
+    parts.push(`${word} ${escapeHtml(peopleData[person.father].name)}`);
+  }
+  if(person.mother && peopleData[person.mother]){
+    parts.push(`Mother: ${escapeHtml(peopleData[person.mother].name)}`);
+  }
+  if(person.spouse && peopleData[person.spouse]){
+    parts.push(`Spouse: ${escapeHtml(peopleData[person.spouse].name)}`);
+  }
+
+  return parts.join("<br>");
+}
+
+function sortByOrder(list){
+  return list.slice().sort((a,b)=>{
+    let ao = (a.order===null||a.order===undefined) ? Infinity : a.order;
+    let bo = (b.order===null||b.order===undefined) ? Infinity : b.order;
+    if(ao !== bo) return ao - bo;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function renderAdminTreePreview(inTree){
+
+  if(!inTree || inTree.length === 0){
+    adminTreePreview.innerHTML = `<div class="empty">No people in this tree yet</div>`;
+    return;
+  }
+
+  let roots = sortByOrder(inTree.filter(p =>
+    !p.father || !peopleData[p.father] || !peopleData[p.father].trees || !peopleData[p.father].trees[currentTree]
+  ));
+
+  let generations = [];
+  let processed = new Set();
+  let expandedCouples = new Set();
+
+  function buildGeneration(nodes, level){
+
+    if(!generations[level]) generations[level] = [];
+
+    nodes.forEach(person=>{
+
+      if(processed.has(person.id)) return;
+      processed.add(person.id);
+
+      let spouse = null;
+      let minimalOnly = false;
+
+      if(person.spouse && peopleData[person.spouse]){
+
+        let s = peopleData[person.spouse];
+
+        if(s.trees && s.trees[currentTree]){
+
+          let pairKey = [person.id, person.spouse].sort().join("-");
+
+          if(expandedCouples.has(pairKey)){
+            minimalOnly = true;
+          } else {
+            spouse = { id: person.spouse, ...s };
+            expandedCouples.add(pairKey);
+            processed.add(spouse.id);
+          }
+        }
+      }
+
+      let children = sortByOrder(inTree.filter(p => p.father === person.id));
+
+      generations[level].push({ mainPerson: person, spouse, minimalOnly, children: minimalOnly ? [] : children });
+
+      if(children.length && !minimalOnly){
+        buildGeneration(children, level+1);
+      }
+    });
+  }
+
+  buildGeneration(roots, 0);
+
+  let html = `<div class="tree-wrapper"><div class="tree-area"><svg class="tree-svg" id="adminTreeSVG"></svg>`;
+
+  generations.forEach(gen=>{
+
+    html += `<div class="generation">`;
+
+    gen.forEach(unit=>{
+
+      let person = unit.mainPerson;
+      let spouse = unit.spouse;
+      let shared = person.trees && Object.keys(person.trees).length > 1;
+      let mainCardId = unit.minimalOnly ? `person-${person.id}-dup` : `person-${person.id}`;
+
+      html += `
+        <div class="family-unit">
+          <div id="${mainCardId}" class="person-card ${shared?'shared-person':''} ${unit.minimalOnly?'minimal-card':''}">
+            ${shared ? `<div class="shared-badge">Shared</div>` : ""}
+            <div class="person-name">${escapeHtml(person.name)}</div>
+            <div class="person-meta">${relationLabelAdmin(person)}</div>
+            ${unit.minimalOnly ? `<div class="minimal-tag">Shown in full elsewhere</div>` : ""}
+          </div>
+          ${spouse ? `
+            <div class="spouse-link"></div>
+            <div id="person-${spouse.id}" class="person-card spouse-card">
+              <div class="person-name">${escapeHtml(spouse.name)}</div>
+              <div class="person-meta">${relationLabelAdmin(spouse)}</div>
+            </div>
+          ` : ""}
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+  });
+
+  html += `</div></div>`;
+
+  adminTreePreview.innerHTML = html;
+
+  setTimeout(()=>drawAdminTreeLines(inTree), 100);
+}
+
+function drawAdminTreeLines(inTree){
+
+  let svg = document.getElementById("adminTreeSVG");
+  if(!svg) return;
+
+  svg.innerHTML = "";
+
+  let svgRect = svg.getBoundingClientRect();
+
+  document.querySelectorAll("#adminTreePreview .family-unit").forEach(unit=>{
+
+    let cards = unit.querySelectorAll(".person-card");
+    if(cards.length === 0) return;
+
+    let firstRect = cards[0].getBoundingClientRect();
+    let lastRect = cards[cards.length-1].getBoundingClientRect();
+
+    let centerX = (firstRect.left + lastRect.right) / 2 - svgRect.left;
+    let centerY = firstRect.bottom - svgRect.top;
+
+    let mainId = cards[0].id.replace("-dup","").replace("person-","");
+
+    inTree.forEach(child=>{
+
+      if(child.father !== mainId) return;
+
+      let childCard = document.getElementById("person-"+child.id) || document.getElementById("person-"+child.id+"-dup");
+      if(!childCard) return;
+
+      let childRect = childCard.getBoundingClientRect();
+      let childX = childRect.left + childRect.width/2 - svgRect.left;
+      let childY = childRect.top - svgRect.top;
+      let midY = (centerY + childY) / 2;
+
+      svg.innerHTML += `<path d="M ${centerX} ${centerY} V ${midY} H ${childX} V ${childY}" class="connector-line"/>`;
+    });
+  });
+}
+
+let adminResizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(adminResizeTimer);
+  adminResizeTimer = setTimeout(()=>{
+    if(currentTree) renderPeopleUI();
+  }, 200);
+});
 
 /* ===========================
    HELPERS
