@@ -927,6 +927,103 @@ function sortByOrder(list){
   });
 }
 
+/* ===========================
+   GENERATION ENGINE (mirrors home.html)
+   A married-in spouse with no father in this tree attaches to their
+   partner's generation instead of floating as a false root.
+=========================== */
+
+function computeLevel(id, map, cache, visiting){
+
+  if(cache.has(id)) return cache.get(id);
+
+  let p = map[id];
+  if(!p) return 0;
+
+  if(visiting.has(id)) return 0;
+
+  visiting.add(id);
+
+  let lvl;
+
+  if(p.father && map[p.father]){
+    lvl = computeLevel(p.father, map, cache, visiting) + 1;
+  } else if(p.spouse && map[p.spouse]){
+    lvl = computeLevel(p.spouse, map, cache, visiting);
+  } else {
+    lvl = 0;
+  }
+
+  visiting.delete(id);
+  cache.set(id, lvl);
+
+  return lvl;
+}
+
+function computeSortKey(id, map, cache){
+
+  if(cache.has(id)) return cache.get(id);
+
+  let p = map[id];
+  if(!p) return "";
+
+  let pad = n => String(n===null||n===undefined?9999:n).padStart(5,"0");
+
+  let key;
+
+  if(p.father && map[p.father]){
+    key = computeSortKey(p.father, map, cache) + "." + pad(p.order);
+  } else if(p.spouse && map[p.spouse] && map[p.spouse].father && map[map[p.spouse].father]){
+    key = computeSortKey(p.spouse, map, cache) + "-s";
+  } else {
+    key = pad(p.order);
+  }
+
+  cache.set(id, key);
+  return key;
+}
+
+function buildFamilyUnits(people){
+
+  let map = {};
+  people.forEach(p=> map[p.id] = p);
+
+  let levelCache = new Map();
+  people.forEach(p=> computeLevel(p.id, map, levelCache, new Set()));
+
+  let sortCache = new Map();
+  let sorted = people.slice().sort((a,b)=>
+    computeSortKey(a.id, map, sortCache).localeCompare(computeSortKey(b.id, map, sortCache))
+  );
+
+  let maxLevel = 0;
+  sorted.forEach(p=> maxLevel = Math.max(maxLevel, levelCache.get(p.id) || 0));
+
+  let generations = [];
+  for(let i=0;i<=maxLevel;i++) generations[i] = [];
+
+  let consumed = new Set();
+
+  sorted.forEach(person=>{
+
+    if(consumed.has(person.id)) return;
+    consumed.add(person.id);
+
+    let lvl = levelCache.get(person.id) || 0;
+    let spouse = null;
+
+    if(person.spouse && map[person.spouse] && !consumed.has(person.spouse) &&
+       levelCache.get(person.spouse) === lvl){
+      spouse = map[person.spouse];
+      consumed.add(spouse.id);
+    }
+
+    generations[lvl].push({ mainPerson: person, spouse });
+  });
+
+  return generations;
+}
+
 function renderAdminTreePreview(inTree){
 
   if(!inTree || inTree.length === 0){
@@ -934,55 +1031,7 @@ function renderAdminTreePreview(inTree){
     return;
   }
 
-  let roots = sortByOrder(inTree.filter(p =>
-    !p.father || !peopleData[p.father] || !peopleData[p.father].trees || !peopleData[p.father].trees[currentTree]
-  ));
-
-  let generations = [];
-  let processed = new Set();
-  let expandedCouples = new Set();
-
-  function buildGeneration(nodes, level){
-
-    if(!generations[level]) generations[level] = [];
-
-    nodes.forEach(person=>{
-
-      if(processed.has(person.id)) return;
-      processed.add(person.id);
-
-      let spouse = null;
-      let minimalOnly = false;
-
-      if(person.spouse && peopleData[person.spouse]){
-
-        let s = peopleData[person.spouse];
-
-        if(s.trees && s.trees[currentTree]){
-
-          let pairKey = [person.id, person.spouse].sort().join("-");
-
-          if(expandedCouples.has(pairKey)){
-            minimalOnly = true;
-          } else {
-            spouse = { id: person.spouse, ...s };
-            expandedCouples.add(pairKey);
-            processed.add(spouse.id);
-          }
-        }
-      }
-
-      let children = sortByOrder(inTree.filter(p => p.father === person.id));
-
-      generations[level].push({ mainPerson: person, spouse, minimalOnly, children: minimalOnly ? [] : children });
-
-      if(children.length && !minimalOnly){
-        buildGeneration(children, level+1);
-      }
-    });
-  }
-
-  buildGeneration(roots, 0);
+  let generations = buildFamilyUnits(inTree);
 
   let html = `<div class="tree-wrapper"><div class="tree-area"><svg class="tree-svg" id="adminTreeSVG"></svg>`;
 
@@ -995,15 +1044,13 @@ function renderAdminTreePreview(inTree){
       let person = unit.mainPerson;
       let spouse = unit.spouse;
       let shared = person.trees && Object.keys(person.trees).length > 1;
-      let mainCardId = unit.minimalOnly ? `person-${person.id}-dup` : `person-${person.id}`;
 
       html += `
         <div class="family-unit">
-          <div id="${mainCardId}" class="person-card ${shared?'shared-person':''} ${unit.minimalOnly?'minimal-card':''}">
+          <div id="person-${person.id}" class="person-card ${shared?'shared-person':''}">
             ${shared ? `<div class="shared-badge">Shared</div>` : ""}
             <div class="person-name">${escapeHtml(person.name)}</div>
             <div class="person-meta">${relationLabelAdmin(person)}</div>
-            ${unit.minimalOnly ? `<div class="minimal-tag">Shown in full elsewhere</div>` : ""}
           </div>
           ${spouse ? `
             <div class="spouse-link"></div>
@@ -1046,13 +1093,14 @@ function drawAdminTreeLines(inTree){
     let centerX = (firstRect.left + lastRect.right) / 2 - svgRect.left;
     let centerY = firstRect.bottom - svgRect.top;
 
-    let mainId = cards[0].id.replace("-dup","").replace("person-","");
+    let mainId = cards[0].id.replace("person-","");
+    let spouseId = cards.length > 1 ? cards[1].id.replace("person-","") : null;
 
     inTree.forEach(child=>{
 
-      if(child.father !== mainId) return;
+      if(child.father !== mainId && child.father !== spouseId) return;
 
-      let childCard = document.getElementById("person-"+child.id) || document.getElementById("person-"+child.id+"-dup");
+      let childCard = document.getElementById("person-"+child.id);
       if(!childCard) return;
 
       let childRect = childCard.getBoundingClientRect();
