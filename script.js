@@ -996,13 +996,8 @@ function buildFamilyUnits(people){
     computeSortKey(a.id, map, sortCache).localeCompare(computeSortKey(b.id, map, sortCache))
   );
 
-  let maxLevel = 0;
-  sorted.forEach(p=> maxLevel = Math.max(maxLevel, levelCache.get(p.id) || 0));
-
-  let generations = [];
-  for(let i=0;i<=maxLevel;i++) generations[i] = [];
-
   let consumed = new Set();
+  let units = [];
 
   sorted.forEach(person=>{
 
@@ -1018,10 +1013,62 @@ function buildFamilyUnits(people){
       consumed.add(spouse.id);
     }
 
-    generations[lvl].push({ mainPerson: person, spouse });
+    units.push({ mainPerson: person, spouse, level: lvl, children: [] });
   });
 
-  return generations;
+  units.forEach(u=>{
+
+    u.children = units.filter(cu=>{
+      let cp = cu.mainPerson;
+      return cp.father === u.mainPerson.id || (u.spouse && cp.father === u.spouse.id);
+    });
+
+    u.children.sort((a,b)=>{
+      let ao = (a.mainPerson.order===null||a.mainPerson.order===undefined) ? Infinity : a.mainPerson.order;
+      let bo = (b.mainPerson.order===null||b.mainPerson.order===undefined) ? Infinity : b.mainPerson.order;
+      if(ao !== bo) return ao - bo;
+      return a.mainPerson.name.localeCompare(b.mainPerson.name);
+    });
+  });
+
+  let roots = units.filter(u=> u.level === 0);
+
+  roots.sort((a,b)=>
+    computeSortKey(a.mainPerson.id, map, sortCache).localeCompare(computeSortKey(b.mainPerson.id, map, sortCache))
+  );
+
+  return roots;
+}
+
+function renderAdminBranchHtml(unit){
+
+  let person = unit.mainPerson;
+  let spouse = unit.spouse;
+  let shared = person.trees && Object.keys(person.trees).length > 1;
+
+  let childrenHtml = unit.children.length
+    ? `<div class="children-row">${unit.children.map(renderAdminBranchHtml).join("")}</div>`
+    : "";
+
+  return `
+    <div class="branch">
+      <div class="family-unit">
+        <div id="person-${person.id}" class="person-card ${shared?'shared-person':''}">
+          ${shared ? `<div class="shared-badge">Shared</div>` : ""}
+          <div class="person-name">${escapeHtml(person.name)}</div>
+          <div class="person-meta">${relationLabelAdmin(person)}</div>
+        </div>
+        ${spouse ? `
+          <div class="spouse-link"></div>
+          <div id="person-${spouse.id}" class="person-card spouse-card">
+            <div class="person-name">${escapeHtml(spouse.name)}</div>
+            <div class="person-meta">${relationLabelAdmin(spouse)}</div>
+          </div>
+        ` : ""}
+      </div>
+      ${childrenHtml}
+    </div>
+  `;
 }
 
 function renderAdminTreePreview(inTree){
@@ -1031,42 +1078,18 @@ function renderAdminTreePreview(inTree){
     return;
   }
 
-  let generations = buildFamilyUnits(inTree);
+  let roots = buildFamilyUnits(inTree);
 
-  let html = `<div class="tree-wrapper"><div class="tree-area"><svg class="tree-svg" id="adminTreeSVG"></svg>`;
-
-  generations.forEach(gen=>{
-
-    html += `<div class="generation">`;
-
-    gen.forEach(unit=>{
-
-      let person = unit.mainPerson;
-      let spouse = unit.spouse;
-      let shared = person.trees && Object.keys(person.trees).length > 1;
-
-      html += `
-        <div class="family-unit">
-          <div id="person-${person.id}" class="person-card ${shared?'shared-person':''}">
-            ${shared ? `<div class="shared-badge">Shared</div>` : ""}
-            <div class="person-name">${escapeHtml(person.name)}</div>
-            <div class="person-meta">${relationLabelAdmin(person)}</div>
-          </div>
-          ${spouse ? `
-            <div class="spouse-link"></div>
-            <div id="person-${spouse.id}" class="person-card spouse-card">
-              <div class="person-name">${escapeHtml(spouse.name)}</div>
-              <div class="person-meta">${relationLabelAdmin(spouse)}</div>
-            </div>
-          ` : ""}
+  let html = `
+    <div class="tree-wrapper">
+      <div class="tree-area">
+        <svg class="tree-svg" id="adminTreeSVG"></svg>
+        <div class="tree-root-row">
+          ${roots.map(renderAdminBranchHtml).join("")}
         </div>
-      `;
-    });
-
-    html += `</div>`;
-  });
-
-  html += `</div></div>`;
+      </div>
+    </div>
+  `;
 
   adminTreePreview.innerHTML = html;
 
